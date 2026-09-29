@@ -1,0 +1,1162 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>周报看板 —— 钟梦娇</title>
+    <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Microsoft YaHei", sans-serif; }
+        body { background: #f5f7fa; padding: 20px; color: #333; }
+        .container { max-width: 1800px; margin: 0 auto; }
+        h1 { text-align: center; margin-bottom: 20px; color: #2c3e50; font-size: 22px; }
+        .readonly-tip{
+            background:#ffeaa7;
+            color:#856404;
+            padding:10px 16px;
+            border-radius:6px;
+            text-align:center;
+            margin-bottom:16px;
+            font-weight:500;
+        }
+        /* 卡片通用 */
+        .card {
+            background: #fff;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #2c3e50;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
+        .btn {
+            padding: 6px 14px;
+            background: #409eff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        .btn:hover { opacity: 0.85; }
+        .btn.danger { background: #f56c6c; }
+        .btn.success { background: #67c23a; }
+        .btn.warn { background: #e6a23c; }
+        .btn:disabled {
+            background:#c0c4cc;
+            cursor:not-allowed;
+            opacity: 1;
+        }
+
+        /* ===== 淡粉色按钮（筛选栏操作按钮） ===== */
+        .btn.btn-pink {
+            background: #ffe3ec;
+            color: #d6336c;
+            border: 1px solid #ffc2d6;
+            font-weight: 500;
+        }
+        .btn.btn-pink:hover {
+            background: #ffd0df;
+            opacity: 1;
+        }
+        .btn.btn-pink:disabled {
+            background: #ffeef4;
+            color: #e58fae;
+            border-color: #ffe2ec;
+            opacity: 1;
+            cursor: not-allowed;
+        }
+
+        /* 筛选栏 */
+        .filter-bar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+            margin-bottom: 15px;
+        }
+        .filter-bar select, .filter-bar button {
+            padding: 6px 12px;
+            border: 1px solid #dcdfe6;
+            border-radius: 4px;
+            background: #fff;
+            font-size: 13px;
+        }
+        .filter-bar .btn { border: none; }
+        .legend-tag {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            border: 1px solid;
+        }
+        .tag-active { color: #fff; }
+
+        /* 图表 */
+        #mainChart { width: 100%; height: 380px; }
+
+        /* 汇总卡片 */
+        .summary-row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin-top: 15px;
+        }
+        .summary-card {
+            padding: 15px;
+            border-radius: 8px;
+            border-left: 4px solid;
+            background: #fafbfc;
+        }
+        .summary-card .num { font-size: 24px; font-weight: 700; margin-bottom: 4px; }
+        .summary-card .desc { font-size: 12px; color: #909399; line-height: 1.4; }
+
+        /* 工作任务表格 */
+        .task-table-wrap {
+            overflow-x: auto;
+            border: 1px solid #ebeef5;
+            border-radius: 4px;
+            max-height: 700px;
+            overflow-y: auto;
+        }
+        .task-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 3200px;
+        }
+        .task-table th, .task-table td {
+            border: 1px solid #ebeef5;
+            padding: 10px 12px;
+            vertical-align: top;
+            min-width: 260px;
+        }
+        .task-table th {
+            background: #f5f7fa;
+            font-weight: 600;
+            color: #606266;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            text-align: center;
+        }
+        /* 首列冻结 */
+        .task-table td:first-child,
+        .task-table th:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 3;
+            font-weight: 500;
+            min-width: 320px;
+            border-right: 2px solid #dcdfe6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 8px;
+        }
+        .task-table th:first-child { z-index: 4; background: #f5f7fa; }
+        
+        .row-ops {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .op-btn {
+            cursor: pointer;
+            font-size: 14px;
+            opacity: 0.6;
+            user-select: none;
+            padding: 0 4px;
+        }
+        .op-btn:hover { opacity: 1; }
+        .op-btn.move-up { color: #409eff; }
+        .op-btn.move-down { color: #409eff; }
+        .op-btn.del { color: #f56c6c; }
+        
+        .task-cell {
+            width: 100%;
+            min-height: 40px;
+            border: none;
+            outline: none;
+            font-size: 13px;
+            line-height: 1.6;
+            resize: none;
+            background: transparent;
+            font-family: inherit;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+        .task-cell:focus { background: rgba(64,158,255,0.08); }
+
+        /* 四组颜色底色 */
+        .group-green td:first-child { background: #e8f4e8; }
+        .group-yellow td:first-child { background: #fff7e6; }
+        .group-gray td:first-child { background: #f0f0f3; }
+        .group-blue td:first-child { background: #e6f4f5; }
+
+        /* SM制作跟踪表格 */
+        .sm-table-wrap {
+            overflow-x: auto;
+            overflow-y: auto;
+            border: 1px solid #ebeef5;
+            border-radius: 4px;
+            max-height: 480px;
+        }
+        .sm-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            min-width: 1400px;
+        }
+        .sm-table th, .sm-table td {
+            border: 1px solid #ebeef5;
+            padding: 8px 10px;
+            vertical-align: middle;
+            text-align: center;
+            min-width: 120px;
+        }
+        .sm-table th {
+            background: #f5f0f5;
+            font-weight: 600;
+            color: #606266;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        /* SM表首列冻结 */
+        .sm-table td:first-child,
+        .sm-table th:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 3;
+            font-weight: 500;
+            text-align: left;
+            min-width: 110px;
+            border-right: 2px solid #dcdfe6;
+        }
+        .sm-table th:first-child { z-index: 4; background: #f5f0f5; }
+        
+        .sm-project-row td {
+            background: #fff0f5;
+            font-weight: 600;
+            color: #c2366e;
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .sm-project-row td:first-child { background: #fff0f5; }
+        
+        .sm-demand-row td {
+            background: #fff7e6;
+            text-align: left;
+            font-size: 12px;
+        }
+        .sm-demand-row td:first-child { background: #fff7e6; }
+        
+        .sm-demand-input {
+            width: 130px;
+            border: none;
+            outline: none;
+            background: transparent;
+            font-size: 12px;
+            font-family: inherit;
+            margin: 0 8px;
+        }
+        .sm-demand-input:focus { background: rgba(64,158,255,0.08); }
+        
+        .sm-cell {
+            width: 100%;
+            border: none;
+            outline: none;
+            text-align: center;
+            font-size: 13px;
+            background: transparent;
+            font-family: inherit;
+        }
+        .sm-cell:focus { background: rgba(64,158,255,0.08); }
+
+        /* 通用多行文本框 */
+        .text-area {
+            width: 100%;
+            height: 180px;
+            padding: 12px;
+            border: 1px solid #dcdfe6;
+            border-radius: 4px;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            outline: none;
+            font-family: inherit;
+            overflow-y: auto;
+        }
+        .text-area:focus { border-color: #409eff; }
+        .save-tip { font-size: 12px; color: #909399; margin-top: 8px; text-align: right; }
+        
+        #importFile { display: none; }
+
+        /* 移动端适配 */
+        @media (max-width:768px) {
+            body {padding:10px;}
+            .card {padding:12px;}
+            .summary-row {grid-template-columns: repeat(2, 1fr);gap:10px;}
+            .btn {padding:6px 8px;font-size:12px;}
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>周报看板 —— 钟梦娇</h1>
+        <div id="readonlyTip" class="readonly-tip" style="display:none;">🔒 当前为【只读查看模式】，无法编辑。<button class="btn success view-btn" onclick="unlockEdit()">输入密钥解锁编辑</button></div>
+
+        <!-- 折线图卡片 -->
+        <div class="card">
+            <div class="filter-bar">
+                <span>时间段</span>
+                <select id="startTime"></select>
+                <span>至</span>
+                <select id="endTime"></select>
+                <div id="legendTags"></div>
+                <button class="btn view-btn btn-pink" onclick="resetFilter()">重置筛选</button>
+                <div class="btn-group" style="margin-left: auto;">
+                    <button class="btn edit-btn btn-pink" onclick="saveData(true)">💾 保存内容</button>
+                    <button class="btn edit-btn btn-pink" onclick="saveHtmlFile()">💾 保存HTML(含数据)</button>
+                    <button class="btn edit-btn btn-pink" onclick="exportBackup()">📥 数据备份(json)</button>
+                    <button class="btn view-btn btn-pink" onclick="document.getElementById('importFile').click()">📤 恢复备份</button>
+                    <input type="file" id="importFile" accept=".json" onchange="importBackup(event)">
+                    <button class="btn edit-btn btn-pink" onclick="openKeySetting()">⚙️ 设置访问密钥</button>
+                </div>
+            </div>
+            <div id="mainChart"></div>
+            
+            <!-- 汇总卡片 -->
+            <div class="summary-row" id="summaryRow"></div>
+        </div>
+
+        <!-- 工作任务明细表 -->
+        <div class="card">
+            <div class="card-title">
+                <span>工作任务明细表（首列冻结 · 编辑自动保存 · 支持排序增删）</span>
+                <div class="btn-group">
+                    <button class="btn edit-btn" onclick="saveData(true)">💾 保存</button>
+                    <button class="btn edit-btn" onclick="addNewWeek()">+ 新增一周</button>
+                    <button class="btn edit-btn" onclick="addTaskRow()">+ 新增任务行</button>
+                    <button class="btn danger edit-btn" onclick="resetData()">重置数据</button>
+                </div>
+            </div>
+            <div class="task-table-wrap">
+                <table class="task-table" id="taskTable">
+                    <thead>
+                        <tr id="taskHead"></tr>
+                    </thead>
+                    <tbody id="taskBody"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- 周报备注 / 工作说明 -->
+        <div class="card">
+            <div class="card-title">周报备注 / 工作说明</div>
+            <textarea class="text-area" id="noteInput" placeholder="在此输入本周工作备注、问题说明、进展总结...&#10;文字多了会自动出现滚动条，内容自动保存"></textarea>
+            <div class="save-tip">✅ 所有编辑操作自动保存 · 也可点「保存」手动确认</div>
+        </div>
+
+        <!-- SM制作跟踪 -->
+        <div class="card">
+            <div class="card-title">
+                <span>SM制作跟踪（首列冻结 · 编辑自动保存 · 支持增删项目）</span>
+                <div class="btn-group">
+                    <button class="btn edit-btn" onclick="saveData(true)">💾 保存</button>
+                    <button class="btn edit-btn" onclick="addSmProject()">+ 新增项目</button>
+                </div>
+            </div>
+            <div class="sm-table-wrap">
+                <table class="sm-table" id="smTable">
+                    <thead>
+                        <tr>
+                            <th>项目 / 类型</th>
+                            <th>客户</th>
+                            <th>EE</th>
+                            <th>Power</th>
+                            <th>FW</th>
+                            <th>ME</th>
+                            <th>Optical</th>
+                            <th>LCM ME</th>
+                            <th>Teardown Instruction</th>
+                        </tr>
+                    </thead>
+                    <tbody id="smBody"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 固定：折线图数据源（5个指定任务项） ==========
+        const chartSeriesConfig = [
+            { name: "试产", color: "#e6a23c" },
+            { name: "量产", color: "#409eff" },
+            { name: "供应商 查BOM", color: "#67c23a" },
+            { name: "售后BOM发行", color: "#909399" },
+            { name: "售后BOM转厂", color: "#f56c6c" }
+        ];
+
+        // 时间段
+        const defaultTimes = ["7/1-7/8", "7/9-7/15", "7/16-7/22", "7/23-7/29", "7/30-8/5", "8/6-8/12", "8/13-8/19", "8/20-8/26", "8/27-9/2", "9/3-9/9"];
+
+        // 默认任务行配置
+        const defaultTaskRows = [
+            { name: "IT debug", group: "green" },
+            { name: "PLM CR", group: "green" },
+            { name: "报销", group: "yellow" },
+            { name: "行政", group: "yellow" },
+            { name: "品质", group: "yellow" },
+            { name: "HR", group: "yellow" },
+            { name: "简易SM", group: "gray" },
+            { name: "设备投资管理", group: "gray" },
+            { name: "其他", group: "gray" },
+            { name: "试产", group: "blue" },
+            { name: "量产", group: "blue" },
+            { name: "售后BOM发行", group: "blue" },
+            { name: "售后BOM转厂", group: "blue" },
+            { name: "供应商 查BOM", group: "blue" }
+        ];
+
+        // 默认任务数据
+        function getDefaultTaskData() {
+            const data = {};
+            defaultTaskRows.forEach(row => {
+                data[row.name] = new Array(defaultTimes.length).fill("/");
+            });
+            
+            const idx = (t) => defaultTimes.indexOf(t);
+
+            // 绿色组
+            data["IT debug"][idx("7/1-7/8")] = "测试优化：第三版 7/3 部署优化\n采购担当清单导入，缺tco板和BOC 担当导入\ndebug 3次迭代；7/7 已上线运行";
+            data["IT debug"][idx("7/9-7/15")] = "RFQ 担当问题维护跟进";
+            data["IT debug"][idx("8/6-8/12")] = "PLM CR 功能需求，8/E上线；\n影响分析报表&报表性能优化，\n8/14部署上线";
+
+            data["PLM CR"][idx("7/1-7/8")] = "TBD";
+            data["PLM CR"][idx("7/9-7/15")] = "PLM CR 相关跟进&提单";
+            data["PLM CR"][idx("7/23-7/29")] = "MNT CR格式拉通ok";
+            data["PLM CR"][idx("7/30-8/5")] = "Portal 已确认 &PLM 需求提单开发中";
+            data["PLM CR"][idx("8/27-9/2")] = "PLM CR 功能测试：ok";
+            data["PLM CR"][idx("9/3-9/9")] = "PLM CR 功能测试 SOP ：ok\n编码 小数三位 ：待TV 进度确认";
+
+            // 黄色组
+            data["报销"][idx("7/1-7/8")] = "报销*3";
+            data["报销"][idx("7/16-7/22")] = "差旅*2";
+            data["报销"][idx("7/23-7/29")] = "差旅*1";
+            data["报销"][idx("7/30-8/5")] = "差旅*1";
+            data["报销"][idx("8/6-8/12")] = "差旅*1";
+            data["报销"][idx("8/13-8/19")] = "差旅*1";
+            data["报销"][idx("8/20-8/26")] = "差旅 & 通讯 & 房租";
+            data["报销"][idx("8/27-9/2")] = "学籍";
+            data["报销"][idx("9/3-9/9")] = "报销-学籍\n9-11月报销 6万";
+
+            data["行政"][idx("7/1-7/8")] = "培训宣导";
+            data["行政"][idx("7/9-7/15")] = "培训宣导";
+            data["行政"][idx("7/16-7/22")] = "培训宣导";
+            data["行政"][idx("7/23-7/29")] = "培训宣导*2";
+            data["行政"][idx("7/30-8/5")] = "7/30 月巡 & 培训签字";
+            data["行政"][idx("8/6-8/12")] = "培训宣导*1";
+            data["行政"][idx("8/13-8/19")] = "培训宣导*1";
+            data["行政"][idx("8/20-8/26")] = "培训宣导*1";
+            data["行政"][idx("8/27-9/2")] = "培训宣导*1 & 例会";
+            data["行政"][idx("9/3-9/9")] = "培训宣导*1";
+
+            data["品质"][idx("9/3-9/9")] = "9月7-8：应审跟进";
+            data["HR"][idx("9/3-9/9")] = "新人答题宣导 & 考勤核实";
+
+            // 灰色组
+            data["简易SM"][idx("7/1-7/8")] = "SE*2 ；E *3 ：收集ok";
+            data["简易SM"][idx("7/9-7/15")] = "SE*2 ；E *3 ：确认OSD 7/31";
+            data["简易SM"][idx("7/16-7/22")] = "SE*2 ；E *3 ：确认OSD 7/31";
+            data["简易SM"][idx("7/23-7/29")] = "SE*2 ；E *3 ：FW OSD 8/12";
+            data["简易SM"][idx("7/30-8/5")] = "SE*2 确认 8/7 ；E *3 ：FW OSD 8/12";
+            data["简易SM"][idx("8/6-8/12")] = "SE*2 ；E *3 ：确认中 8/14";
+            data["简易SM"][idx("8/13-8/19")] = "SE*2 ；E *3 ：8/18 ok";
+            data["简易SM"][idx("8/27-9/2")] = "9-10月：9/8 收集中";
+
+            data["设备投资管理"][idx("7/1-7/8")] = "7/9 软体需求*2 ；已发邮件";
+            data["设备投资管理"][idx("7/30-8/5")] = "8/9 新一轮提报收集中";
+            data["设备投资管理"][idx("8/20-8/26")] = "9-10月：9/8 收集中";
+            data["设备投资管理"][idx("8/27-9/2")] = "9-10月：9/8 收集中";
+            data["设备投资管理"][idx("9/3-9/9")] = "本次20W 投资无人提报";
+
+            data["其他"][idx("7/1-7/8")] = "量产CR 复查*149笔";
+            data["其他"][idx("7/23-7/29")] = "协助 CR SOP学习";
+            data["其他"][idx("7/30-8/5")] = "培训档8/6：缺电子";
+            data["其他"][idx("8/13-8/19")] = "AI 测试机：非生产领料单-提提";
+            data["其他"][idx("8/20-8/26")] = "AI 测试机：非生产领料单-流程中\nCR互查 & 交流";
+            data["其他"][idx("8/27-9/2")] = "CR互查 & 交流\nCR 培训图例梳写";
+            data["其他"][idx("9/3-9/9")] = "CR互查 & 交流\nCR 培训图例梳写";
+
+            // 蓝色组（折线图固定数据源）
+            data["试产"][idx("7/1-7/8")] = "28";
+            data["试产"][idx("7/9-7/15")] = "33";
+            data["试产"][idx("7/16-7/22")] = "31";
+            data["试产"][idx("7/23-7/29")] = "44";
+            data["试产"][idx("7/30-8/5")] = "42";
+            data["试产"][idx("8/6-8/12")] = "46";
+            data["试产"][idx("8/13-8/19")] = "30";
+            data["试产"][idx("8/20-8/26")] = "37";
+            data["试产"][idx("8/27-9/2")] = "40";
+            data["试产"][idx("9/3-9/9")] = "22";
+
+            data["量产"][idx("7/1-7/8")] = "18";
+            data["量产"][idx("7/9-7/15")] = "7";
+            data["量产"][idx("7/16-7/22")] = "25";
+            data["量产"][idx("7/23-7/29")] = "27";
+            data["量产"][idx("7/30-8/5")] = "16";
+            data["量产"][idx("8/6-8/12")] = "30";
+            data["量产"][idx("8/13-8/19")] = "14";
+            data["量产"][idx("8/20-8/26")] = "22";
+            data["量产"][idx("8/27-9/2")] = "12";
+            data["量产"][idx("9/3-9/9")] = "17";
+
+            data["售后BOM发行"][idx("7/1-7/8")] = "19";
+            data["售后BOM发行"][idx("7/9-7/15")] = "9";
+            data["售后BOM发行"][idx("7/30-8/5")] = "2";
+            data["售后BOM发行"][idx("8/6-8/12")] = "2";
+            data["售后BOM发行"][idx("8/13-8/19")] = "3";
+            data["售后BOM发行"][idx("8/27-9/2")] = "4";
+            data["售后BOM发行"][idx("9/3-9/9")] = "6";
+
+            data["售后BOM转厂"][idx("7/1-7/8")] = "7";
+            data["售后BOM转厂"][idx("9/3-9/9")] = "0";
+
+            data["供应商 查BOM"][idx("7/1-7/8")] = "10";
+            data["供应商 查BOM"][idx("7/9-7/15")] = "12";
+            data["供应商 查BOM"][idx("7/16-7/22")] = "12";
+            data["供应商 查BOM"][idx("7/23-7/29")] = "12";
+            data["供应商 查BOM"][idx("7/30-8/5")] = "11";
+            data["供应商 查BOM"][idx("8/6-8/12")] = "12";
+            data["供应商 查BOM"][idx("8/13-8/19")] = "14";
+            data["供应商 查BOM"][idx("8/20-8/26")] = "14";
+            data["供应商 查BOM"][idx("8/27-9/2")] = "14";
+            data["供应商 查BOM"][idx("9/3-9/9")] = "16";
+            
+            return data;
+        }
+
+        // SM制作跟踪默认数据
+        const defaultSmData = [
+            {
+                name: "E2426H",
+                customer: "Dell",
+                schedule: { EE: "5月19日", Power: "5月20日", FW: "5月22日", ME: "5月25日", Optical: "5月26日", "LCM ME": "5月27日", "Teardown Instruction": "5月26日" },
+                progress: { EE: "ok", Power: "ok", FW: "ok", ME: "ok", Optical: "ok", "LCM ME": "ok", "Teardown Instruction": "ok" },
+                demandTime: "6月2日",
+                submitTime: "6月2日",
+                remark: ""
+            },
+            {
+                name: "P2226H",
+                customer: "Dell",
+                schedule: { EE: "5月20日", Power: "5月22日", FW: "5月26日", ME: "5月28日", Optical: "", "LCM ME": "", "Teardown Instruction": "5月28日" },
+                progress: { EE: "ok", Power: "ok", FW: "ok", ME: "ok", Optical: "", "LCM ME": "", "Teardown Instruction": "ok" },
+                demandTime: "6月6日",
+                submitTime: "6月4日",
+                remark: ""
+            },
+            {
+                name: "SE系列 *2",
+                customer: "Dell",
+                schedule: { EE: "6月30日", Power: "7月2日", FW: "8月12日", ME: "7月6日", Optical: "7月8日", "LCM ME": "7月10日", "Teardown Instruction": "7月17日" },
+                progress: { EE: "ok", Power: "ok", FW: "ok", ME: "ok", Optical: "ok", "LCM ME": "ok", "Teardown Instruction": "ok" },
+                demandTime: "8月20日",
+                submitTime: "8月18日",
+                remark: "SE2426HM、SE2726HM"
+            },
+            {
+                name: "E系列 *3",
+                customer: "Dell",
+                schedule: { EE: "7月10日", Power: "7月14日", FW: "8月12日", ME: "7月20日", Optical: "7月22日", "LCM ME": "7月24日", "Teardown Instruction": "7月24日" },
+                progress: { EE: "ok", Power: "ok", FW: "ok", ME: "ok", Optical: "ok", "LCM ME": "ok", "Teardown Instruction": "ok" },
+                demandTime: "8月25日",
+                submitTime: "8月18日",
+                remark: "E2426HM、E246HAM、E2726HM"
+            }
+        ];
+
+        const smColumns = ["EE", "Power", "FW", "ME", "Optical", "LCM ME", "Teardown Instruction"];
+
+        const STORAGE_KEY = 'weekReport_zhongmengjiao_v13';
+        let chartData = { times: [], taskRows: [], taskData: {}, note: "", smData: [], editKey:"" };
+        let visibleProjects = [];
+        const myChart = echarts.init(document.getElementById('mainChart'));
+        let isEditMode = false;
+
+        // 加载数据
+        function loadData() {
+            let embedded = null;
+            const embEl = document.getElementById('embeddedData');
+            if (embEl) {
+                try { embedded = JSON.parse(embEl.textContent); } catch(e) { embedded = null; }
+            }
+
+            let saved = null;
+            const savedStr = localStorage.getItem(STORAGE_KEY);
+            if (savedStr) {
+                try { saved = JSON.parse(savedStr); } catch(e) { saved = null; }
+            }
+
+            const embTime = embedded && embedded.lastSaved ? embedded.lastSaved : 0;
+            const savedTime = saved && saved.lastSaved ? saved.lastSaved : 0;
+
+            if (embedded && embTime >= savedTime) {
+                chartData = embedded;
+            } else if (saved) {
+                chartData = saved;
+            } else {
+                chartData = {
+                    times: [...defaultTimes],
+                    taskRows: JSON.parse(JSON.stringify(defaultTaskRows)),
+                    taskData: getDefaultTaskData(),
+                    note: "",
+                    smData: JSON.parse(JSON.stringify(defaultSmData)),
+                    editKey:"",
+                    lastSaved: Date.now()
+                };
+            }
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(chartData));
+            document.getElementById('noteInput').value = chartData.note || '';
+            
+            // 初始化可见系列：默认显示全部5个
+            visibleProjects = chartSeriesConfig.map(s => s.name);
+        }
+
+        // 从任务表提取数值："/"或空返回0
+        function getTaskValue(taskName, colIdx) {
+            const val = chartData.taskData[taskName]?.[colIdx];
+            if (val === undefined || val === null || val === '' || val === '/') {
+                return 0;
+            }
+            const num = Number(val);
+            return isNaN(num) ? 0 : num;
+        }
+
+        // 保存数据
+        function saveData(showTip = false) {
+            chartData.note = document.getElementById('noteInput').value;
+            chartData.lastSaved = Date.now();
+            localStorage.setItem(STORAGE_KEY, JSON.stringify(chartData));
+            if (showTip) {
+                alert("✅ 内容已保存到本地");
+            }
+        }
+
+        // ========== 密钥相关函数 ==========
+        function openKeySetting(){
+            if(!isEditMode){
+                alert("🔒请先解锁编辑模式，才能设置密钥");
+                return;
+            }
+            const oldKey = chartData.editKey || "";
+            const newKey = prompt("设置访问密钥（留空=关闭密码，打开直接可编辑）\n⚠️设置后，其他人打开网页默认只读",oldKey);
+            if(newKey === null) return;
+            chartData.editKey = newKey.trim();
+            saveData();
+            alert("✅密钥保存成功！下次打开页面生效");
+        }
+        function unlockEdit(){
+            const pwd = prompt("请输入编辑密钥：");
+            if(pwd === null) return;
+            if(pwd === chartData.editKey){
+                isEditMode = true;
+                applyEditStatus();
+                alert("✅密钥正确，已解锁编辑");
+            }else{
+                alert("❌密钥错误，保持只读模式");
+            }
+        }
+        function applyEditStatus(){
+            const tipDom = document.getElementById('readonlyTip');
+            // 只禁用编辑类按钮，查看/解锁类按钮始终可用
+            const editBtns = document.querySelectorAll(".edit-btn");
+            const allInput = document.querySelectorAll(".task-cell,.sm-cell,.sm-demand-input,#noteInput");
+            const opBtns = document.querySelectorAll(".op-btn");
+            
+            if(isEditMode){
+                tipDom.style.display="none";
+                editBtns.forEach(b=>b.disabled=false);
+                allInput.forEach(i=>i.disabled=false);
+                opBtns.forEach(b=>b.style.pointerEvents="auto");
+            }else{
+                tipDom.style.display="block";
+                editBtns.forEach(b=>b.disabled=true);
+                allInput.forEach(i=>i.disabled=true);
+                opBtns.forEach(b=>b.style.pointerEvents="none");
+            }
+        }
+
+        // 保存HTML网页文件
+        function saveHtmlFile(){
+            saveData();
+            let script = document.createElement('script');
+            script.id = 'embeddedData';
+            script.type = 'application/json';
+            script.textContent = JSON.stringify(chartData).replace(/</g, '\\u003c');
+            document.head.appendChild(script);
+            const htmlDom = document.documentElement.outerHTML;
+            document.head.removeChild(script);
+
+            const blob = new Blob([htmlDom], {type: "text/html;charset=utf-8"});
+            const url = URL.createObjectURL(blob);
+            const now = new Date();
+            const dateStr = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0');
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = `周报看板_${dateStr}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+            alert("✅HTML已保存，里面已包含你编辑后的全部数据！\n这个文件发到手机/发给同事，打开就是最新内容，不用再导入JSON。");
+        }
+
+        // 导出数据备份
+        function exportBackup() {
+            saveData();
+            const dataStr = JSON.stringify(chartData, null, 2);
+            const blob = new Blob([dataStr], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            
+            const now = new Date();
+            const dateStr = now.getFullYear() + String(now.getMonth()+1).padStart(2,'0') + String(now.getDate()).padStart(2,'0');
+            const fileName = `周报看板_备份_${dateStr}.json`;
+
+            const a = document.createElement("a");
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // 导入备份恢复
+        function importBackup(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const imported = JSON.parse(e.target.result);
+                    if (!imported.times || !imported.taskRows) {
+                        alert('备份文件格式不正确，无法导入');
+                        return;
+                    }
+                    imported.lastSaved = Date.now();
+                    chartData = imported;
+                    saveData();
+                    visibleProjects = chartSeriesConfig.map(s => s.name);
+                    isEditMode = false;
+                    renderAll();
+                    alert('✅备份导入成功，数据已加载！');
+                } catch (err) {
+                    alert('文件解析失败，请确认是正确的备份json文件');
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = '';
+        }
+
+        // 渲染筛选器
+        function renderFilter() {
+            const startSel = document.getElementById('startTime');
+            const endSel = document.getElementById('endTime');
+            startSel.innerHTML = '';
+            endSel.innerHTML = '';
+            
+            chartData.times.forEach((t, idx) => {
+                startSel.innerHTML += `<option value="${idx}">${t}</option>`;
+                endSel.innerHTML += `<option value="${idx}">${t}</option>`;
+            });
+            
+            startSel.value = 0;
+            endSel.value = chartData.times.length - 1;
+            
+            startSel.onchange = renderChart;
+            endSel.onchange = renderChart;
+
+            // 图例标签（固定5个）
+            const legendBox = document.getElementById('legendTags');
+            legendBox.innerHTML = '';
+            chartSeriesConfig.forEach(item => {
+                const tag = document.createElement('span');
+                tag.className = 'legend-tag tag-active';
+                tag.style.borderColor = item.color;
+                tag.style.background = item.color;
+                tag.textContent = item.name;
+                tag.onclick = () => toggleProject(item.name, tag, item.color);
+                legendBox.appendChild(tag);
+            });
+        }
+
+        // 切换系列显示
+        function toggleProject(name, tag, color) {
+            if (visibleProjects.includes(name)) {
+                visibleProjects = visibleProjects.filter(p => p !== name);
+                tag.classList.remove('tag-active');
+                tag.style.background = 'transparent';
+                tag.style.color = color;
+            } else {
+                visibleProjects.push(name);
+                tag.classList.add('tag-active');
+                tag.style.background = color;
+                tag.style.color = '#fff';
+            }
+            renderChart();
+            renderSummary();
+        }
+
+        // 重置筛选
+        function resetFilter() {
+            document.getElementById('startTime').value = 0;
+            document.getElementById('endTime').value = chartData.times.length - 1;
+            visibleProjects = chartSeriesConfig.map(s => s.name);
+            renderFilter();
+            renderChart();
+            renderSummary();
+        }
+
+        // 渲染折线图（固定5个数据源，按名称匹配）
+        function renderChart() {
+            const startIdx = parseInt(document.getElementById('startTime').value);
+            const endIdx = parseInt(document.getElementById('endTime').value);
+            const showTimes = chartData.times.slice(startIdx, endIdx + 1);
+
+            const series = chartSeriesConfig.map(item => {
+                const data = [];
+                for (let c = startIdx; c <= endIdx; c++) {
+                    data.push(getTaskValue(item.name, c));
+                }
+                return {
+                    name: item.name,
+                    type: 'line',
+                    data: data,
+                    smooth: true,
+                    symbol: 'circle',
+                    symbolSize: 6,
+                    lineStyle: { width: 2 },
+                    itemStyle: { color: item.color }
+                };
+            }).filter(s => visibleProjects.includes(s.name));
+
+            const option = {
+                tooltip: { trigger: 'axis' },
+                legend: { show: false },
+                grid: { left: '3%', right: '4%', bottom: '10%', containLabel: true },
+                xAxis: {
+                    type: 'category',
+                    boundaryGap: false,
+                    data: showTimes,
+                    axisLabel: { fontSize: 12 }
+                },
+                yAxis: { 
+                    type: 'value',
+                    axisLabel: { fontSize: 12 }
+                },
+                dataZoom: [
+                    { type: 'inside', start: 0, end: 100 },
+                    { type: 'slider', start: 0, end: 100, height: 20, bottom: 10 }
+                ],
+                series: series
+            };
+            myChart.setOption(option, true);
+        }
+
+        // 渲染汇总卡片
+        function renderSummary() {
+            const startIdx = parseInt(document.getElementById('startTime').value);
+            const endIdx = parseInt(document.getElementById('endTime').value);
+            const row = document.getElementById('summaryRow');
+            row.innerHTML = '';
+
+            chartSeriesConfig.forEach(item => {
+                if (!visibleProjects.includes(item.name)) return;
+                const arr = [];
+                for (let c = startIdx; c <= endIdx; c++) {
+                    arr.push(getTaskValue(item.name, c));
+                }
+                const total = arr.reduce((a,b) => a+b, 0);
+                const avg = (total / arr.length).toFixed(1);
+                const max = Math.max(...arr);
+                const maxIdx = arr.indexOf(max);
+                const maxTime = chartData.times.slice(startIdx, endIdx + 1)[maxIdx];
+
+                const card = document.createElement('div');
+                card.className = 'summary-card';
+                card.style.borderLeftColor = item.color;
+                card.innerHTML = `
+                    <div class="num" style="color: ${item.color}">${total}</div>
+                    <div class="desc">均 ${avg}/期 · 峰值 ${max}（${maxTime}）</div>
+                `;
+                row.appendChild(card);
+            });
+        }
+
+        // 渲染工作任务表（带上移下移排序按钮）
+        function renderTaskTable() {
+            const thead = document.getElementById('taskHead');
+            thead.innerHTML = '<th>工作任务 \ 时间段</th>';
+            chartData.times.forEach(t => {
+                thead.innerHTML += `<th>${t}</th>`;
+            });
+
+            const tbody = document.getElementById('taskBody');
+            tbody.innerHTML = '';
+
+            chartData.taskRows.forEach((row, index) => {
+                const tr = document.createElement('tr');
+                tr.className = `group-${row.group}`;
+                
+                // 首列：任务名 + 排序按钮 + 删除按钮
+                let firstCol = `
+                    <span>${row.name}</span>
+                    <div class="row-ops">
+                        <span class="op-btn move-up" onclick="moveTaskRow(${index}, -1)" title="上移">↑</span>
+                        <span class="op-btn move-down" onclick="moveTaskRow(${index}, 1)" title="下移">↓</span>
+                        <span class="op-btn del" onclick="deleteTaskRow(${index})" title="删除该行">×</span>
+                    </div>
+                `;
+                
+                let html = `<td>${firstCol}</td>`;
+                chartData.times.forEach((t, colIdx) => {
+                    const val = chartData.taskData[row.name]?.[colIdx] || '/';
+                    html += `
+                        <td>
+                            <textarea class="task-cell" 
+                                data-row="${row.name}" 
+                                data-col="${colIdx}"
+                                oninput="updateTaskCell(this)"
+                            >${val}</textarea>
+                        </td>
+                    `;
+                });
+                
+                tr.innerHTML = html;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // 任务行上移/下移排序
+        function moveTaskRow(index, direction) {
+            const newIndex = index + direction;
+            if (newIndex < 0 || newIndex >= chartData.taskRows.length) return;
+            // 交换行顺序
+            const temp = chartData.taskRows[index];
+            chartData.taskRows[index] = chartData.taskRows[newIndex];
+            chartData.taskRows[newIndex] = temp;
+            saveData();
+            renderTaskTable();
+        }
+
+        // 更新任务单元格 → 自动保存 + 图表同步更新（仅5个指定任务）
+        function updateTaskCell(el) {
+            const row = el.dataset.row;
+            const col = parseInt(el.dataset.col);
+            if (!chartData.taskData[row]) {
+                chartData.taskData[row] = new Array(chartData.times.length).fill('/');
+            }
+            chartData.taskData[row][col] = el.value;
+            saveData(false);
+            
+            // 仅当修改的是指定的5个图表任务时，才更新图表
+            const chartNames = chartSeriesConfig.map(s => s.name);
+            if (chartNames.includes(row)) {
+                renderChart();
+                renderSummary();
+            }
+        }
+
+        // 新增任务行（可选颜色，不会自动加入折线图）
+        function addTaskRow() {
+            const name = prompt('请输入新任务名称');
+            if (!name) return;
+            if (chartData.taskRows.some(r => r.name === name)) {
+                alert('该任务名称已存在');
+                return;
+            }
+            const groupInput = prompt('请选择任务行颜色：\n1=绿色\n2=黄色\n3=灰色\n4=蓝色', '4');
+            let group = 'blue';
+            switch(groupInput) {
+                case '1': group = 'green'; break;
+                case '2': group = 'yellow'; break;
+                case '3': group = 'gray'; break;
+                case '4': group = 'blue'; break;
+                default: group = 'blue';
+            }
+            
+            chartData.taskRows.push({ name: name, group: group });
+            chartData.taskData[name] = new Array(chartData.times.length).fill('/');
+            saveData();
+            renderTaskTable();
+            // 新增任务默认不加入折线图，只有固定5个才显示
+        }
+
+        // 删除任务行
+        function deleteTaskRow(index) {
+            if (!confirm('确定删除该任务行？删除后无法恢复。')) return;
+            const row = chartData.taskRows[index];
+            delete chartData.taskData[row.name];
+            chartData.taskRows.splice(index, 1);
+            saveData();
+            // 如果删除的是图表任务，同步更新图表
+            const chartNames = chartSeriesConfig.map(s => s.name);
+            if (chartNames.includes(row.name)) {
+                renderFilter();
+                renderChart();
+                renderSummary();
+            }
+            renderTaskTable();
+        }
+
+        // 渲染SM跟踪表格
+        function renderSmTable() {
+            const tbody = document.getElementById('smBody');
+            tbody.innerHTML = '';
+
+            chartData.smData.forEach((project, pIdx) => {
+                const nameTr = document.createElement('tr');
+                nameTr.className = 'sm-project-row';
+                nameTr.innerHTML = `<td colspan="9">
+                    <span>${project.name}</span>
+                    <span class="op-btn del" onclick="deleteSmProject(${pIdx})" title="删除该项目">×</span>
+                </td>`;
+                tbody.appendChild(nameTr);
+
+                const scheduleTr = document.createElement('tr');
+                let scheduleHtml = `<td>日程</td><td>${project.customer}</td>`;
+                smColumns.forEach(col => {
+                    scheduleHtml += `<td><input class="sm-cell" data-p="${pIdx}" data-type="schedule" data-col="${col}" value="${project.schedule[col] || ''}" onchange="updateSmCell(this)"></td>`;
+                });
+                scheduleTr.innerHTML = scheduleHtml;
+                tbody.appendChild(scheduleTr);
+
+                const progressTr = document.createElement('tr');
+                let progressHtml = `<td>进度</td><td>${project.customer}</td>`;
+                smColumns.forEach(col => {
+                    progressHtml += `<td><input class="sm-cell" data-p="${pIdx}" data-type="progress" data-col="${col}" value="${project.progress[col] || ''}" onchange="updateSmCell(this)"></td>`;
+                });
+                progressTr.innerHTML = progressHtml;
+                tbody.appendChild(progressTr);
+
+                const demandTr = document.createElement('tr');
+                demandTr.className = 'sm-demand-row';
+                demandTr.innerHTML = `
+                    <td colspan="9">
+                        需求时间：<input class="sm-demand-input" data-p="${pIdx}" data-field="demandTime" value="${project.demandTime}" onchange="updateSmDemand(this)">
+                        交稿时间：<input class="sm-demand-input" data-p="${pIdx}" data-field="submitTime" value="${project.submitTime}" onchange="updateSmDemand(this)">
+                        备注：<input class="sm-demand-input" style="width:200px" data-p="${pIdx}" data-field="remark" value="${project.remark || ''}" onchange="updateSmDemand(this)">
+                    </td>
+                `;
+                tbody.appendChild(demandTr);
+            });
+        }
+
+        function updateSmCell(el) {
+            const pIdx = parseInt(el.dataset.p);
+            const type = el.dataset.type;
+            const col = el.dataset.col;
+            chartData.smData[pIdx][type][col] = el.value;
+            saveData(false);
+        }
+
+        function updateSmDemand(el) {
+            const pIdx = parseInt(el.dataset.p);
+            const field = el.dataset.field;
+            chartData.smData[pIdx][field] = el.value;
+            saveData(false);
+        }
+
+        function addSmProject() {
+            const name = prompt('请输入新项目名称，例如：X系列*4');
+            if (!name) return;
+            const newProject = {
+                name: name,
+                customer: "Dell",
+                schedule: { EE: "", Power: "", FW: "", ME: "", Optical: "", "LCM ME": "", "Teardown Instruction": "" },
+                progress: { EE: "", Power: "", FW: "", ME: "", Optical: "", "LCM ME": "", "Teardown Instruction": "" },
+                demandTime: "",
+                submitTime: "",
+                remark: ""
+            };
+            chartData.smData.push(newProject);
+            saveData();
+            renderSmTable();
+        }
+
+        function deleteSmProject(index) {
+            if (!confirm('确定删除该项目？删除后无法恢复。')) return;
+            chartData.smData.splice(index, 1);
+            saveData();
+            renderSmTable();
+        }
+
+        // 新增一周
+        function addNewWeek() {
+            const newTime = prompt('请输入新的时间段，例如：9/10-9/16');
+            if (!newTime) return;
+            
+            chartData.times.push(newTime);
+            
+            Object.keys(chartData.taskData).forEach(name => {
+                chartData.taskData[name].push('/');
+            });
+            
+            saveData();
+            renderFilter();
+            renderChart();
+            renderSummary();
+            renderTaskTable();
+        }
+
+        // 重置数据
+        function resetData() {
+            if (!confirm('确定要重置为原始数据吗？当前修改会全部丢失。\n建议先点「📥 数据备份(json)」保存当前内容。')) return;
+            localStorage.removeItem(STORAGE_KEY);
+            loadData();
+            renderAll();
+        }
+
+        // 全部重新渲染
+        function renderAll() {
+            renderFilter();
+            renderChart();
+            renderSummary();
+            renderTaskTable();
+            renderSmTable();
+            document.getElementById('noteInput').value = chartData.note || '';
+            // 判断是否有密钥：有密钥默认只读；无密钥直接编辑
+            if(chartData.editKey && chartData.editKey !== ""){
+                isEditMode = false;
+            }else{
+                isEditMode = true;
+            }
+            applyEditStatus();
+        }
+
+        // 备注自动保存
+        document.getElementById('noteInput').addEventListener('input', function(){ saveData(false); });
+
+        // 窗口缩放重绘
+        window.addEventListener('resize', () => myChart.resize());
+
+        // 初始化
+        loadData();
+        renderAll();
+    </script>
+</body>
+</html>
