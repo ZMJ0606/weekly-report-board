@@ -6,238 +6,410 @@
     <title>Y26 JOB - 钟梦娇</title>
     <script src="https://cdn.jsdelivr.net/npm/echarts@5.4.3/dist/echarts.min.js"></script>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: "Microsoft YaHei", -apple-system, sans-serif; }
-        body { background: #f0f2f5; padding: 20px; color: #333; font-size: 13px; }
+        :root{
+            --primary:#4f7cff; --primary-d:#3a63e8; --primary-50:#eef3ff; --primary-100:#dfe8ff;
+            --success:#16a34a; --success-50:#f0fbf4;
+            --warning:#d97706; --warning-50:#fff8eb;
+            --danger:#e11d48; --danger-50:#fff1f4;
+            --slate:#64748b; --slate-50:#f6f8fb;
+            --ink:#1c2736; --ink-2:#4b586b; --ink-3:#8a97a8;
+            --line:#e7ebf1; --line-2:#eef1f6;
+            --bg:#f3f5f9;
+            --r:14px; --r-sm:9px; --r-pill:999px;
+            --sh:0 1px 2px rgba(17,24,39,.05), 0 10px 26px -16px rgba(17,24,39,.18);
+            --sh-h:0 2px 6px rgba(17,24,39,.06), 0 16px 36px -16px rgba(17,24,39,.22);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html,body {
+            font-family: -apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;
+        }
+        body { background: var(--bg); padding: 24px; color: var(--ink); font-size: 13px; }
         .container { max-width: 1800px; margin: 0 auto; }
-        h1 { text-align: center; margin-bottom: 20px; color: #1f2d3d; font-size: 24px; font-weight: 600; letter-spacing: 1px; }
+
+        /* 顶部标题区 */
+        .page-head{ display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:12px; margin-bottom:22px; }
+        .page-head h1 { font-size: 23px; font-weight: 700; color: var(--ink); letter-spacing:.5px; margin:0; }
+        .page-sub { color: var(--ink-3); font-size: 12px; margin-top: 7px; }
+        .save-status{
+            display:inline-flex; align-items:center; gap:7px; font-size:12px; color:var(--ink-2);
+            background:#fff; border:1px solid var(--line); padding:8px 14px; border-radius:var(--r-pill);
+        }
+        .save-status .dot{ width:7px; height:7px; border-radius:50%; background:var(--ink-3); }
+        .save-status.saved .dot{ background:var(--success); }
+        .save-status.dirty .dot{ background:var(--warning); }
+
         .readonly-tip{
-            background:#fff3cd; color:#856404; padding:10px 16px; border-radius:6px;
-            text-align:center; margin-bottom:16px; font-weight:500; box-shadow: 0 2px 6px rgba(255,243,205,0.5);
+            background:#fff8eb; color:#9a6a12; padding:11px 16px; border:1px solid #fdeccb; border-radius:10px;
+            text-align:center; margin-bottom:16px; font-weight:500;
         }
         .file-tip{
-            background:#e7f3ff; color:#0b5cad; padding:10px 16px; border-radius:6px;
-            text-align:center; margin-bottom:16px; font-weight:500; box-shadow: 0 2px 6px rgba(231,243,255,0.5);
+            background:#eef4ff; color:#2b4ea8; padding:11px 16px; border:1px solid #dbe6ff; border-radius:10px;
+            text-align:center; margin-bottom:16px; font-weight:500;
         }
 
-        /* 自定义滚动条 */
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        /* 滚动条 */
+        ::-webkit-scrollbar { width: 9px; height: 9px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
+        ::-webkit-scrollbar-thumb { background: #cfd7e2; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a9b5c4; }
 
-        /* 卡片通用 */
+        /* 卡片 */
         .card {
-            background: #fff; border-radius: 10px; padding: 20px;
-            margin-bottom: 20px; box-shadow: 0 4px 16px rgba(0,0,0,0.04);
-            transition: box-shadow 0.3s;
+            background: #fff; border:1px solid var(--line); border-radius: var(--r); padding: 22px;
+            margin-bottom: 20px; box-shadow: var(--sh);
+            transition: box-shadow .25s, transform .25s;
         }
-        .card:hover { box-shadow: 0 6px 20px rgba(0,0,0,0.08); }
+        .card:hover { box-shadow: var(--sh-h); }
         .card-title {
-            font-size: 16px; font-weight: 600; margin-bottom: 15px; color: #2c3e50;
-            display: flex; justify-content: space-between; align-items: center;
+            font-size: 15px; font-weight: 700; margin-bottom: 17px; color: var(--ink);
+            display: flex; justify-content: space-between; align-items: center; gap:12px; flex-wrap:wrap;
+        }
+        .title-left{ display:flex; align-items:center; gap:10px; }
+        .title-badge{
+            width:31px; height:31px; border-radius:9px; display:flex; align-items:center; justify-content:center;
+            font-size:15px; background:var(--primary-50);
         }
         .btn-group { display: flex; gap: 8px; flex-wrap: wrap; }
         .btn {
-            padding: 6px 14px; background: #409eff; color: #fff; border: none;
-            border-radius: 4px; cursor: pointer; font-size: 13px; transition: 0.2s;
+            padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight:500;
+            background: var(--primary); color: #fff; border:1px solid transparent; transition: .18s;
         }
-        .btn:hover:not(:disabled) { opacity: 0.85; transform: translateY(-1px); }
-        .btn.danger { background: #f56c6c; }
-        .btn.success { background: #67c23a; }
-        .btn:disabled { background:#c0c4cc; cursor:not-allowed; opacity: 1; transform:none; }
-        .btn.btn-pink { background: #ffe3ec; color: #d6336c; border: 1px solid #ffc2d6; font-weight: 500; }
-        .btn.btn-pink:hover:not(:disabled) { background: #ffd0df; opacity: 1; }
-        .btn.btn-pink:disabled { background: #ffeef4; color: #e58fae; border-color: #ffe2ec; cursor: not-allowed; }
+        .btn:hover:not(:disabled) { background: var(--primary-d); transform: translateY(-1px); }
+        .btn.danger { background: var(--danger); }
+        .btn.danger:hover:not(:disabled){ background:#be123c; }
+        .btn.success { background: var(--success); }
+        .btn.success:hover:not(:disabled){ background:#15803d; }
+        .btn:disabled { background:#d6dce5; color:#fff; cursor:not-allowed; transform:none; }
+        .btn.btn-pink { background:#fff; color:#d6336c; border:1px solid #f6c8d9; font-weight:500; }
+        .btn.btn-pink:hover:not(:disabled){ background:#fff3f7; transform:translateY(-1px); }
+        .btn.btn-pink:disabled{ background:#fbf3f7; color:#dda9bd; border-color:#f3e0e9; cursor:not-allowed; }
 
         .btn-add {
-            padding: 2px 8px; font-size: 11px; background: #f8f9fa; color: #606266;
-            border: 1px dashed #c0c4cc; border-radius: 4px; cursor: pointer; margin-top: 4px; display: inline-block;
-            transition: 0.2s;
+            padding: 3px 10px; font-size: 11px; background:#fff; color: var(--primary);
+            border: 1px dashed var(--primary-100); border-radius: 7px; cursor: pointer; margin-top: 5px;
+            display: inline-block; transition: .18s;
         }
-        .btn-add:hover { background: #e6f7ff; color: #1890ff; border-color: #91d5ff; }
+        .btn-add:hover { background: var(--primary-50); border-color: var(--primary); }
+        .btn-mini {
+            padding: 4px 10px; font-size: 11px; border-radius: 7px; cursor: pointer;
+            background: var(--primary-50); color: var(--primary); border: 1px solid var(--primary-100); width:100%;
+        }
+        .btn-mini:hover { background: var(--primary-100); }
 
-        /* 只读模式：彻底隐藏新增/删除等危险操作（CSS 级防呆） */
+        /* 只读防呆 */
         body.is-readonly .btn-add { display: none !important; }
         body.is-readonly .sm-project-row .op-btn.del { display: none !important; }
         body.is-readonly .dynamic-row .op-btn { display: none !important; }
 
-        /* ===== 项目概览小看板 ===== */
-        .project-overview { display: flex; gap: 15px; margin-bottom: 15px; }
-        .ov-card { flex: 1; padding: 12px 16px; border-radius: 6px; background: #fafbfc; border-left: 4px solid #dcdfe6; }
-        .ov-card .num { font-size: 22px; font-weight: bold; color: #333; }
-        .ov-card .label { font-size: 12px; color: #909399; margin-top: 4px; }
+        /* 拖拽 */
+        .drag-handle { cursor: grab; color: #9aa6b5; font-size: 16px; padding: 0 3px; user-select:none; transition:.15s; }
+        .drag-handle:hover { color: var(--primary); }
+        .drag-handle:active { cursor: grabbing; }
+        body.drag-in-progress { user-select: none; }
+        tr.dragging { opacity: .45; background: var(--primary-50) !important; }
+        tr.drag-over-top { box-shadow: inset 0 3px 0 var(--primary); }
+        tr.drag-over-bottom { box-shadow: inset 0 -3px 0 var(--primary); }
 
-        /* ===== 项目/协助看板样式 ===== */
-        .table-wrap { overflow-x: auto; max-height: 600px; overflow-y: auto; border: 1px solid #ebeef5; border-radius: 6px; }
+        /* 概览 */
+        .project-overview { display: flex; gap: 14px; margin-bottom: 16px; }
+        .ov-card {
+            flex: 1; padding: 14px 16px; border-radius: 11px;
+            background: linear-gradient(180deg,#fff,#fafbfd); border:1px solid var(--line); border-left:4px solid var(--line);
+        }
+        .ov-card .num { font-size: 23px; font-weight: 700; color: var(--ink); }
+        .ov-card .label { font-size: 12px; color: var(--ink-3); margin-top: 4px; }
+
+        /* 通用表格 */
+        .table-wrap { overflow-x: auto; max-height: 600px; overflow-y: auto; border: 1px solid var(--line); border-radius: 10px; }
         .project-table { width: 100%; border-collapse: collapse; font-size: 12px; table-layout: fixed; }
         .project-table th, .project-table td {
-            border-bottom: 1px solid #ebeef5; border-right: 1px solid #ebeef5; padding: 8px; vertical-align: top;
+            border-bottom: 1px solid var(--line-2); border-right: 1px solid var(--line-2); padding: 9px; vertical-align: top;
         }
         .project-table th {
-            background: #f8f9fa; font-weight: 600; color: #606266; text-align: left;
-            position: sticky; top: 0; z-index: 10; border-bottom: 2px solid #e4e7ed;
+            background: var(--slate-50); font-weight: 600; color: var(--ink-2); text-align: left; font-size:11.5px;
+            position: sticky; top: 0; z-index: 10; border-bottom: 1px solid var(--line);
         }
-        .project-table tbody tr:hover { background: #fcfdfd; }
+        .project-table tbody tr:hover { background: #f8faff; }
 
-        /* 自适应高度的文本域 */
         .proj-input, .proj-textarea {
-            width: 100%; border: 1px solid transparent; outline: none; padding: 4px 6px;
-            font-family: inherit; font-size: 12px; background: transparent; transition: 0.2s;
-            resize: none; overflow: hidden; line-height: 1.5; color: #303133;
+            width: 100%; border: 1px solid transparent; outline: none; padding: 5px 7px;
+            font-family: inherit; font-size: 12px; background: transparent; transition: .18s;
+            resize: none; overflow: hidden; line-height: 1.5; color: var(--ink);
             white-space: pre-wrap; word-break: break-all;
         }
         .proj-input:focus, .proj-textarea:focus {
-            border-color: #409eff; background: #fff; border-radius: 4px; box-shadow: 0 0 0 2px rgba(64,158,255,0.1);
+            border-color: var(--primary); background: #fff; border-radius: 7px; box-shadow: 0 0 0 3px rgba(79,124,255,.12);
         }
+        .rr-cell { display: flex; flex-direction: column; gap: 4px; }
+        .rr-label { font-size: 10px; color: var(--ink-3); font-weight: 700; padding: 0 2px; }
+        .rr-cell .proj-textarea { border: 1px solid var(--line-2); border-radius: 7px; background: #fbfcfe; }
+        .rr-cell .proj-textarea:focus { background: #fff; }
 
-        /* 动态数组的行内布局 */
-        .dynamic-row { display: flex; gap: 4px; align-items: center; margin-bottom: 4px; background: #fafbfc; padding: 2px; border-radius: 4px; border: 1px solid transparent; transition: 0.2s; }
-        .dynamic-row:hover { border-color: #ebeef5; }
-        .dynamic-row input[type="text"] { flex: 1; min-width: 40px; }
-        .dynamic-row input[type="date"] { width: 105px; font-size: 11px; }
-        .dynamic-row .op-btn { font-size: 12px; color: #f56c6c; cursor: pointer; padding: 0 4px; display: none; }
-        .dynamic-row:hover .op-btn { display: block; } /* 只有悬浮才显示删除按钮 */
+        .dynamic-row { display: flex; gap: 5px; align-items: center; margin-bottom: 5px; background: var(--slate-50); padding: 3px; border-radius: 7px; border: 1px solid transparent; transition: .18s; }
+        .dynamic-row:hover { border-color: var(--line); }
+        .dynamic-row input[type="text"] { flex: 1; min-width: 34px; }
+        .dynamic-row input[type="date"] { width: 100px; font-size: 11px; }
+        .dynamic-row .op-btn { font-size: 13px; color: var(--danger); cursor: pointer; padding: 0 4px; display: none; }
+        .dynamic-row:hover .op-btn { display: block; }
+        .dynamic-row.is-done input { text-decoration: line-through; color: var(--success); }
+        .dynamic-row.is-done { background: var(--success-50); }
 
-        /* 状态下拉框 */
+        .done-check { accent-color: var(--success); width: 14px; height: 14px; cursor: pointer; flex:0 0 auto; }
+        .owner-input { width: 56px !important; flex: 0 0 56px !important; font-size: 11px; }
+
+        /* 日程/节点两行卡片 */
+        .event-card {
+            background: var(--slate-50); border: 1px solid transparent; border-radius: 8px;
+            padding: 6px 7px; margin-bottom: 6px; transition: .18s;
+        }
+        .event-card:hover { border-color: var(--line); }
+        .event-card.is-done { background: var(--success-50); }
+        .event-card .ev-line { display: flex; gap: 6px; align-items: center; }
+        .event-card .ev-line + .ev-line { margin-top: 5px; }
+        .event-card .ev-name { flex: 1; min-width: 0; }
+        .event-card .ev-date { flex: 1; min-width: 0; font-size: 11px; }
+        .event-card .ev-owner { width: 58px; flex: 0 0 58px; font-size: 11px; }
+        .event-card .op-btn { font-size: 14px; color: var(--danger); cursor: pointer; padding: 0 2px; display: none; }
+        .event-card:hover .op-btn { display: block; }
+        .event-card.is-done input { text-decoration: line-through; color: var(--success); }
+        .event-card .overdue-tip { white-space: nowrap; }
+        .field-hint { font-size: 10px; color: var(--ink-3); margin: 3px 0 2px; }
+        .field-hint.risk-hint { color: var(--danger); font-weight: 700; }
+        .proj-name-row { display: flex; gap: 6px; align-items: flex-start; }
+        .proj-name-row .proj-textarea { flex: 1; min-width: 0; font-weight: 700; font-size: 13px; }
+        .proj-name-row .op-btns { flex: 0 0 auto; flex-direction: column; gap: 5px; }
+
         .status-select {
-            padding: 4px; border-radius: 4px; font-weight: 600; border: 1px solid transparent; outline: none; cursor: pointer; font-size: 12px; text-align: center; width: 100%; appearance: none; -webkit-appearance: none;
+            padding: 5px 8px; border-radius: var(--r-pill); font-weight: 600; border: 1px solid transparent;
+            outline: none; cursor: pointer; font-size: 11.5px; text-align: center; width: 100%;
+            appearance: none; -webkit-appearance: none;
         }
-        .status-ongoing { background: #e6f7ff; color: #1890ff; }
-        .status-done { background: #f6ffed; color: #52c41a; }
-        .status-risk { background: #fff1f0; color: #f5222d; }
-        .status-todo { background: #f4f4f5; color: #909399; }
+        .status-select.mini { font-size: 11px; padding: 4px; }
+        .status-ongoing { background: var(--primary-50); color: var(--primary); }
+        .status-done { background: var(--success-50); color: var(--success); }
+        .status-risk { background: var(--danger-50); color: var(--danger); }
+        .status-todo { background: var(--slate-50); color: var(--slate); }
 
-        /* 进度条 */
         .progress-container { display: flex; align-items: center; gap: 6px; margin-top: 4px;}
-        .progress-bar-bg { flex: 1; height: 6px; background: #e4e7ed; border-radius: 3px; overflow: hidden; }
-        .progress-bar-fill { height: 100%; border-radius: 3px; transition: width 0.3s; }
-        .progress-fill-blue { background: #409eff; }
-        .progress-fill-green { background: #67c23a; }
-        .progress-fill-red { background: #f56c6c; }
-        .progress-num { width: 32px; text-align: right; font-size: 11px; color: #606266; font-weight: bold; }
-        .range-input { width: 100%; margin-top: 4px; height: 4px; accent-color: #409eff; cursor: pointer; }
+        .progress-bar-bg { flex: 1; height: 7px; background: #e9edf3; border-radius: var(--r-pill); overflow: hidden; }
+        .progress-bar-fill { height: 100%; border-radius: var(--r-pill); transition: width .3s; }
+        .progress-fill-blue { background: var(--primary); }
+        .progress-fill-green { background: var(--success); }
+        .progress-fill-red { background: var(--danger); }
+        .progress-num { width: 34px; text-align: right; font-size: 11px; color: var(--ink-2); font-weight: 700; }
+        .range-input { width: 100%; margin-top: 5px; height: 4px; accent-color: var(--primary); cursor: pointer; }
 
-        /* 排序按钮 */
-        .op-btns { display: flex; flex-direction: column; gap: 4px; align-items: center; }
-        .op-btn { cursor: pointer; font-size: 14px; color: #909399; transition: 0.2s; user-select: none; }
-        .op-btn:hover { color: #409eff; }
-        .op-btn.del:hover { color: #f56c6c; }
+        .op-btns { display: flex; gap: 5px; align-items: center; }
+        .op-btn { cursor: pointer; font-size: 15px; color: var(--ink-3); transition: .15s; user-select:none; }
+        .op-btn.del:hover { color: var(--danger); }
 
-        /* 关键节点过期提示 */
-        .overdue-input { border: 1px solid #f56c6c !important; color: #f56c6c !important; background: #fff1f0 !important; font-weight: bold; }
-        .overdue-tip { font-size: 10px; color: #f56c6c; font-weight: bold; margin-left: 2px; }
+        .overdue-input { border: 1px solid var(--danger) !important; color: var(--danger) !important; background: var(--danger-50) !important; font-weight: 700; }
+        .overdue-tip { font-size: 10px; color: var(--danger); font-weight: 700; margin-left: 2px; }
+        .soon-input { border: 1px solid #f59e0b !important; color: #b45309 !important; background: var(--warning-50) !important; font-weight: 700; }
+        .soon-tip { font-size: 10px; color: #d97706; font-weight: 700; margin-left: 2px; white-space: nowrap; }
         .title-risk::before { content: "🔴 "; font-size: 12px; }
 
-        /* 筛选栏与图表 */
-        .filter-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 15px; }
-        .filter-bar select { padding: 6px 12px; border: 1px solid #dcdfe6; border-radius: 4px; background: #fff; font-size: 13px; outline: none; }
-
-        .tab-group { display: flex; background: #f0f2f5; border-radius: 6px; padding: 4px; margin-left: 10px; }
-        .tab-btn {
-            padding: 6px 16px; border: none; background: transparent; color: #606266;
-            font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 4px; transition: 0.2s;
+        /* 子事项 */
+        .subtask-block {
+            background: #fff; border: 1px solid var(--line); border-left: 3px solid var(--slate);
+            border-radius: 8px; padding: 6px; margin-bottom: 7px;
         }
-        .tab-btn:hover { color: #409eff; }
-        .tab-btn.active { background: #fff; color: #409eff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); font-weight: bold; }
+        .subtask-block.st-ongoing{ border-left-color:var(--primary); }
+        .subtask-block.st-done{ border-left-color:var(--success); }
+        .subtask-block.st-risk{ border-left-color:var(--danger); }
+        .subtask-block.st-todo{ border-left-color:var(--slate); }
+        .subtask-progress { display: flex; align-items: center; gap: 6px; padding: 0 2px; margin-top: 3px; }
+        .subtask-progress input[type=range] { flex: 1; margin: 0; }
+        .subtask-progress .pct { width: 34px; font-size: 10px; text-align: right; color: var(--ink-2); font-weight: 700; }
+
+        .empty-state{ padding:28px 12px; text-align:center; color:var(--ink-3); font-size:12px; }
+
+        /* 今日聚焦 */
+        .focus-card { border-top: 3px solid var(--primary); }
+        .focus-summary { display: flex; gap: 8px; }
+        .focus-summary .fs-pill { padding: 4px 11px; border-radius: var(--r-pill); font-weight: 700; font-size: 12px; }
+        .fs-pill.fs-overdue { background: var(--danger-50); color: var(--danger); }
+        .fs-pill.fs-soon { background: var(--warning-50); color: #b45309; }
+        .fs-pill.fs-risk { background: #fff1f2; color: #be123c; }
+        .focus-list { display: flex; flex-direction: column; gap: 8px; }
+        .focus-item {
+            display: flex; align-items: center; gap: 10px; padding: 9px 12px; border-radius: 9px;
+            border: 1px solid var(--line-2); border-left: 4px solid var(--line); background: #fbfcfe; font-size: 12.5px;
+        }
+        .focus-item.f-overdue { border-left-color: var(--danger); background: #fff7f8; }
+        .focus-item.f-soon { border-left-color: #f59e0b; background: #fffbf3; }
+        .focus-item.f-risk { border-left-color: #e11d48; background: #fff5f6; }
+        .f-kind { flex: 0 0 auto; font-size: 10.5px; font-weight: 700; padding: 2px 8px; border-radius: var(--r-pill); background: #eef1f6; color: var(--ink-2); }
+        .f-name { font-weight: 700; color: var(--ink); }
+        .f-meta { flex: 1; color: var(--ink-3); font-size: 11.5px; min-width: 0; }
+        .f-state { flex: 0 0 auto; font-weight: 700; font-size: 11.5px; white-space: nowrap; }
+        .f-overdue .f-state { color: var(--danger); }
+        .f-soon .f-state { color: #d97706; }
+        .f-risk .f-state { color: #e11d48; }
+        .focus-empty { padding: 22px; text-align: center; color: var(--success); font-weight: 700; font-size: 13px; }
+
+        /* 筛选栏 */
+        .filter-bar { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+        .filter-bar select { padding: 7px 12px; border: 1px solid var(--line); border-radius: 8px; background: #fff; font-size: 13px; outline: none; }
+        .tab-group { display: flex; background: var(--slate-50); border-radius: 9px; padding: 4px; margin-left: 10px; gap:2px; }
+        .tab-btn {
+            padding: 7px 16px; border: none; background: transparent; color: var(--ink-2);
+            font-size: 13px; font-weight: 500; cursor: pointer; border-radius: 7px; transition: .18s;
+        }
+        .tab-btn:hover { color: var(--primary); }
+        .tab-btn.active { background: #fff; color: var(--primary); box-shadow: 0 1px 4px rgba(17,24,39,.12); font-weight: 700; }
 
         #mainChart { width: 100%; height: 380px; }
-        .chart-indicator { font-size: 13px; color: #909399; margin-bottom: 10px; font-weight: bold; }
-
-        .summary-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 15px; margin-top: 15px; }
-        .summary-card { padding: 15px; border-radius: 8px; border-left: 4px solid; background: #fafbfc; }
+        .chart-indicator { font-size: 12.5px; color: var(--ink-3); margin-bottom: 10px; font-weight: 600; }
+        .chart-legend { display: flex; gap: 18px; flex-wrap: wrap; margin-bottom: 12px; font-size: 12px; color: var(--ink-2); }
+        .lg-item { display: inline-flex; align-items: center; gap: 6px; }
+        .lg-dot { width: 12px; height: 12px; border-radius: 50%; }
+        .sch-done { background: #4f7cff; }
+        .sch-todo { background: #fff; border: 2px solid #4f7cff; width: 10px; height: 10px; }
+        .lg-diamond { width: 11px; height: 11px; transform: rotate(45deg); border-radius: 2px; }
+        .ms-done { background: #d97706; }
+        .ms-overdue { background: #fff; border: 2px solid #e11d48; width: 9px; height: 9px; }
+        .lg-today { width: 2px; height: 14px; background: #e11d48; }
+        body:not(.is-readonly) .chart-legend { }
+        @media (max-width:768px){ .chart-legend{gap:11px;} }
+        .summary-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-top: 16px; }
+        .summary-card { padding: 15px; border-radius: 10px; border-left: 4px solid; background: var(--slate-50); }
         .summary-card .num { font-size: 22px; font-weight: 700; margin-bottom: 4px; }
-        .summary-card .desc { font-size: 12px; color: #909399; }
+        .summary-card .desc { font-size: 11.5px; color: var(--ink-3); }
 
-        /* 工作任务表格 */
-        .task-table-wrap { overflow-x: auto; border: 1px solid #ebeef5; border-radius: 4px; max-height: 800px; overflow-y: auto; }
-        .task-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 3200px; }
-        .task-table th, .task-table td { border: 1px solid #ebeef5; padding: 8px 10px; vertical-align: top; min-width: 200px; }
-        .task-table th { background: #f5f7fa; font-weight: 600; color: #606266; position: sticky; top: 0; z-index: 2; text-align: center; }
-        .task-table td:first-child, .task-table th:first-child {
-            position: sticky; left: 0; z-index: 3; font-weight: 500; min-width: 200px;
-            border-right: 2px solid #dcdfe6; display: flex; justify-content: space-between; align-items: center; gap: 8px; background: #fff;
+        /* 任务明细表 */
+        .group-bar { display: flex; gap: 9px; flex-wrap: wrap; margin-bottom: 13px; }
+        .group-chip {
+            display: inline-flex; align-items: center; gap: 7px; padding: 6px 13px; border-radius: var(--r-pill);
+            border: 1px solid var(--line); background: #fff; font-size: 12px; color: var(--ink-2); cursor: pointer; transition: .18s; user-select: none;
         }
-        .task-table th:first-child { z-index: 4; background: #f5f7fa; }
+        .group-chip:hover { border-color: var(--primary); }
+        .group-chip .swatch { width: 11px; height: 11px; border-radius: 3px; border: 1px solid rgba(0,0,0,.1); }
+        .group-chip .cnt { font-size: 11px; color: var(--ink-3); font-weight: 700; }
+        .group-chip.is-collapsed { background: var(--slate-50); color: var(--ink-3); }
+        .group-chip.is-collapsed .gname { text-decoration: line-through; }
+        .task-table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 10px; max-height: 800px; overflow-y: auto; }
+        .task-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 3200px; }
+        .task-table th, .task-table td { border: 1px solid var(--line-2); padding: 8px 10px; vertical-align: top; min-width: 200px; }
+        .task-table th { background: var(--slate-50); font-weight: 600; color: var(--ink-2); position: sticky; top: 0; z-index: 2; text-align: center; font-size:12px; }
+        .task-table td:first-child, .task-table th:first-child {
+            position: sticky; left: 0; z-index: 3; font-weight: 600; min-width: 215px;
+            border-right: 2px solid var(--line); display: flex; justify-content: space-between; align-items: center; gap: 6px; background: #fff;
+        }
+        .task-table th:first-child { z-index: 4; background: var(--slate-50); }
+        .row-ops { display: flex; gap: 5px; align-items: center; flex:0 0 auto; }
+        .row-color-picker { width: 25px; height: 25px; padding: 0; border: 1px solid var(--line); border-radius: 6px; background: #fff; cursor: pointer; }
+        .color-none-btn { font-size: 12px; cursor: pointer; color: var(--ink-3); padding: 1px 6px; border: 1px solid var(--line); border-radius: 5px; background: #fff; line-height: 1.4; }
+        .color-none-btn:hover { color: var(--danger); border-color: var(--danger); }
+        .quick-search{
+            padding:8px 13px; border:1px solid var(--line); border-radius:8px; font-size:12.5px;
+            width:190px; outline:none; background:#fff; color:var(--ink);
+        }
+        .quick-search:focus{ border-color:var(--primary); box-shadow:0 0 0 3px rgba(79,124,255,.12); }
 
-        .row-ops { display: flex; gap: 6px; align-items: center; }
-
-        /* 彻底取消高度限制的文本域 */
         .task-cell {
             width: 100%; border: none; outline: none; font-size: 13px; line-height: 1.5;
             resize: none; background: transparent; font-family: inherit; white-space: pre-wrap; word-break: break-all; overflow: hidden; padding: 0;
         }
-        .task-cell:focus { background: rgba(64,158,255,0.08); }
-
-        .group-green td:first-child { background: #e8f4e8 !important; }
-        .group-yellow td:first-child { background: #fff7e6 !important; }
-        .group-gray td:first-child { background: #f0f0f3 !important; }
-        .group-blue td:first-child { background: #e6f4f5 !important; }
+        .task-cell:focus { background: rgba(79,124,255,.07); }
 
         /* SM表 */
-        .sm-table-wrap { overflow-x: auto; overflow-y: auto; border: 1px solid #ebeef5; border-radius: 4px; max-height: 480px; }
+        .sm-table-wrap { overflow-x: auto; overflow-y: auto; border: 1px solid var(--line); border-radius: 10px; max-height: 480px; }
         .sm-table { width: 100%; border-collapse: collapse; font-size: 13px; min-width: 1400px; }
-        .sm-table th, .sm-table td { border: 1px solid #ebeef5; padding: 8px 10px; vertical-align: middle; text-align: center; min-width: 120px; }
-        .sm-table th { background: #f5f0f5; font-weight: 600; color: #606266; position: sticky; top: 0; z-index: 2; }
+        .sm-table th, .sm-table td { border: 1px solid var(--line-2); padding: 8px 10px; vertical-align: middle; text-align: center; min-width: 120px; }
+        .sm-table th { background: #faf3f8; font-weight: 600; color: var(--ink-2); position: sticky; top: 0; z-index: 2; font-size:12px; }
         .sm-table td:first-child, .sm-table th:first-child {
-            position: sticky; left: 0; z-index: 3; font-weight: 500; text-align: left; min-width: 110px; border-right: 2px solid #dcdfe6;
+            position: sticky; left: 0; z-index: 3; font-weight: 500; text-align: left; min-width: 110px; border-right: 2px solid var(--line);
         }
-        .sm-table th:first-child { z-index: 4; background: #f5f0f5; }
-        .sm-project-row td { background: #fff0f5; font-weight: 600; color: #c2366e; text-align: left; display: flex; justify-content: space-between; align-items: center; }
-        .sm-project-row td:first-child { background: #fff0f5; }
-        .sm-demand-row td { background: #fff7e6; text-align: left; font-size: 12px; }
-        .sm-demand-row td:first-child { background: #fff7e6; }
-
+        .sm-table th:first-child { z-index: 4; background: #faf3f8; }
+        .sm-project-row td { background: #fdf1f7; font-weight: 700; color: #b02a6b; text-align: left; display: flex; justify-content: space-between; align-items: center; }
+        .sm-project-row td:first-child { background: #fdf1f7; }
+        .sm-demand-row td { background: var(--warning-50); text-align: left; font-size: 12px; }
+        .sm-demand-row td:first-child { background: var(--warning-50); }
         .sm-cell-textarea {
             width: 100%; border: none; outline: none; font-size: 12px; line-height: 1.4; text-align: center;
             resize: none; background: transparent; font-family: inherit; white-space: pre-wrap; word-break: break-all; overflow: hidden; padding: 0;
         }
-        .sm-cell-textarea:focus { background: rgba(64,158,255,0.08); }
+        .sm-cell-textarea:focus { background: rgba(79,124,255,.07); }
+        .sm-name-line { display: flex; align-items: center; gap: 6px; flex: 1; min-width: 0; }
+        .sm-name-input { flex: 1; min-width: 0; font-weight: 700; color: #b02a6b; font-size: 13px; }
+        .sm-name-input:focus { color: var(--ink); }
+        .sm-row-label { font-weight: 700; color: var(--ink-2); background: #f7f8fa; }
+        .sm-cust-input { font-weight: 700; text-align: center; }
+        .sm-cust-slot { background: #fafbfc; }
+        .sm-demand-line { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .sm-demand-line label { font-size: 11px; color: var(--ink-3); font-weight: 700; white-space: nowrap; }
+        .sm-demand-line .proj-input { width: 110px; display: inline-block; border: 1px solid var(--line-2); border-radius: 7px; background: #fff; }
+        .sm-demand-line .sm-remark-input { flex: 1; min-width: 160px; width: auto; }
+
+        /* toast */
+        .toast{
+            position: fixed; left: 50%; bottom: 36px; transform: translate(-50%,16px);
+            background: rgba(28,39,54,.93); color:#fff; padding:11px 22px; border-radius:var(--r-pill);
+            font-size:13px; opacity:0; pointer-events:none; transition:.25s; z-index:9999;
+            box-shadow:0 12px 32px rgba(0,0,0,.28); max-width:80vw;
+        }
+        .toast.show{ opacity:1; transform:translate(-50%,0); }
+        .toast.success{ background:#166534; }
+        .toast.error{ background:#9f1239; }
 
         #importFile { display: none; }
 
         @media (max-width:768px) {
-            body {padding:10px;} .card {padding:12px;} .summary-row {grid-template-columns: repeat(2, 1fr);gap:10px;} .btn {padding:6px 8px;font-size:12px;}
+            body {padding:12px;} .card {padding:14px;}
+            .summary-row {grid-template-columns: repeat(2, 1fr);gap:10px;}
+            .btn {padding:7px 10px;font-size:12px;}
             .project-table th, .project-table td { padding: 6px; }
             .tab-group { width: 100%; margin-left: 0; margin-top: 10px; }
             .project-overview { flex-wrap: wrap; }
             .ov-card { flex: 1 1 40%; }
+            .quick-search{width:100%;}
         }
     </style>
-<script id="embeddedData" type="application/json">{"times":["1月","2月","3月","4月","5月-W1-3","5月-W4","6月-W1","6月-W2","6月-W3","7/1-7/8","7/9-7/15","7/16-7/22","7/23-7/29","7/30-8/5","8/6-8/12","8/13-8/19","8/20-8/26","8/27-9/2","9/3-9/9","9/10-9/30","10/8-10/16","10/19-10/23","10/26-10/30","11/2-11/6"],"taskRows":[{"name":"报销","group":"yellow"},{"name":"行政","group":"yellow"},{"name":"IT debug","group":"green"},{"name":"DBEF KPI","group":"green"},{"name":"结构模组标准化","group":"blue"},{"name":"售后BOM发行","group":"blue"},{"name":"售后BOM转厂","group":"blue"},{"name":"量产CR","group":"blue"},{"name":"简易SM","group":"gray"},{"name":"设备投资管理","group":"gray"},{"name":"杂 all","group":"gray"},{"name":"RFQ DTC","group":"blue"},{"name":"DR","group":"blue"},{"name":"PLM CR","group":"green"},{"name":"品质","group":"yellow"},{"name":"HR","group":"yellow"},{"name":"其他","group":"gray"},{"name":"试产","group":"blue"},{"name":"量产","group":"blue"},{"name":"供应商 查BOM","group":"blue"}],"taskData":{"报销":["/","/","/","/","出差：1","医疗理赔：1","团建费报销整理 ，待提交\n学籍费 ok\n医疗费 NG","团建费 ，已提单\n医疗费，ok","工会报销 - ok","报销*3","/","差旅*2","差旅*1","差旅*1","差旅*1","差旅*1","差旅 & 通讯 & 房租","学籍","报销-学籍\n9-11月报销 6万","差旅*2；通讯；房租\n学籍：9-11月报销 6万","差旅；通讯；房租\n学籍：10-11月报销 6万","10/E 学籍费 ok","11/E 学籍费 ok","差旅*3 通讯*2 房租 ok"],"行政":["/","/","2026年《行政安全责任书》签署","/","月报提交： 5/25\n半年度培训：5/27\n组织图相关资料调整：5/27","例行检查","/","6/16：培训会\n例月培训\n绿色打卡跟进","/","培训宣导","培训宣导","培训宣导","培训宣导*2","7/30 月巡 & 培训签字","培训宣导*1","培训宣导*1","培训宣导*1","培训宣导*1 & 例会","培训宣导*1","培训宣导*2 & 例会","培训宣导*1 & 例会 & 新品定价","例会*2 & 培训*1","巡检ok * 例会*1 *培训ok","10月KPI 已达标"],"IT debug":["/","/","/","/","RFQ 报价系统部署前置确认会：5/20\nRFQ 系统沟通会:5/13","BENQ RFQ报价 系统操作指导:5/26","add 两个优化项 ：6/5 部署","PLM 优化项 跟进： 3","RFQ 需求点提报 & 跟进","测试优化：第三版 7/3 部署优化\n采购担当清单导入，缺tco板和BOC 担当导入\ndebug 3次迭代；7/7 已上线运行","RFQ 担当问题维护跟进","/","/","/","PLM CR 功能需求，8/E上线；\n影响分析报表&报表性能优化，\n8/14部署上线","/","/","/","/","/","/","/","/","/"],"DBEF KPI":["/","/","信息共识：email发出","Y26国产化KPI方案-MNT终端产品线-DBEF 信息对标会","Y26国产化KPI方案-MNT终端产品线-DBEF 信息对标会 2\nDBEF 量产讨论会:5/11","状态：待入工单","/","/","DBEF ECR 导入 信息对标会 3：6/18","/","/","/","/","/","/","/","/","/","/","/","/","/","/"],"结构模组标准化":["/","/","/","/","模组结构膜材 标准库沟通会：5/21 11点","拉通模组光学数据提供：5/25","状态：供应商议价中","/","5/21： MNT 结构&模组结构辅材材料标准化会议记录，模组资料整理","/","/","/","/","/","/","/","/","/","/","/","/","/","/"],"售后BOM发行":["S01:1","/","S01:1","S01:1+1","S01 ：2 +1","S01:2","/","/","/","19","9","/","/","2","2","3","/","4","6","6","10","1","5","/"],"售后BOM转厂":["/","/","/","/","售后26371的模组邀请修改描述 ：3","/","/","/","/","7","/","/","/","/","/","/","/","/","0","/","/","/","/","/"],"量产CR":["/","/","/","/","CR：27","CR：7\nCR：11","CR:12 +8","CR：19","CR：15","/","/","/","/","/","/","/","/","/","/","/","/","/","/"],"简易SM":["/","/","/","/","Dell E2426H ：6/2\nDell P2226H ：6/6\n资料收集","Dell E2426H ：5/28 第一版","Dell E2426H ：6/2  OK \nDell P2226H ：6/6  ok\n资料整理","/","ACER_LCD_MN25310101_CB322Q V3 简易SM :6/16 OK","SE*2 ；E *3 ：收集ok","SE*2 ；E *3 ：确认OSD 7/31","SE*2 ；E *3 ：确认OSD 7/31","SE*2 ；E *3 ：FW OSD 8/12","SE*2 确认 8/7 ；E *3 ：FW OSD 8/12","SE*2 ；E *3 ：确认中 8/14","SE*2 ；E *3 ：8/18 ok","/","9-10月：9/8 收集中","/","/","Acer KA242YU A ","/","/","/"],"设备投资管理":["/","/","/","/","/","6/8 前收集一轮","/","/","/","7/9 软体需求*2 ；已发邮件","/","/","/","8/9 新一轮提报收集中","/","/","9-10月：9/8 收集中","9-10月：9/8 收集中","本次20W 投资无人提报","/","/","无人提报","/","27年事业计划预算跟进ok"],"杂 all":["2025年高企复审“开放式创新创业平台建设情况说明”资料收集","/","FW DR对外模板输出邀请","/","工会团建费提报 - 1W","派遣函盖章申请","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/"],"RFQ DTC":["ASUS:1\nHP:2\n三星：2\nLG:2\nDell：3","DTC 沟通会 2月3 17点 2-4\nIO DATA :1\nIIYAMA:1\nPlanic IC :3\nLenovo：1","IIYAMA:2\nLenovo:3\n三星:11\nASUS:2\nLG:15\nHP:4\nMI:4\nOTS极致低成本:4","MSI:3\nASUS:1\nMI:3\nWalmart：1\nAcer：2\n三星：20\nIIYAMA:1\n浪潮：1\nAcer：1\nbenQ :1\nLG :3\nASUS :1\nOTS :3","Acer：1\nbenQ：1","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/"],"DR":["SAMSUNG G31H 23.8&27：1/12","/","Walmart_23.8 FHD 144Hz ：3/10\nSAMSUNG 32G53H ： 3/10\nI-ODATA A系列21.45- 23.8- 27：3/24","联想 Legion 27Q＆U-20:4/29","Lenovo ： 资料整理\nLG ：TBD","Lenovo ： 5/25  & 系统流程发起","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/"],"PLM CR":["/","/","/","/","/","/","/","/","/","TBD","PLM CR 相关跟进&提单","/","MNT CR格式拉通ok","Portal 已确认 &PLM 需求提单开发中","/","/","/","PLM CR 功能测试：ok","PLM CR 功能测试 SOP ：ok\n编码 小数三位 ：待TV 进度确认","/","编码 小数三位 ：待TV 进度确认","编码 小数三位 ：待TV 进度确认","/","/"],"品质":["/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","9月7-8：应审跟进","/","/","/","/","11/1 S01 质量稽核"],"HR":["/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","新人答题宣导 & 考勤核实","考勤核实","考勤核实","考勤核实","考勤核实","10月KPI 已达标 "],"其他":["/","/","/","/","/","/","/","/","/","量产CR 复查*149笔","/","/","协助 CR SOP学习","培训档8/6：缺电子","/","AI 测试机：非生产领料单-提提","AI 测试机：非生产领料单-流程中\nCR互查 & 交流","CR互查 & 交流\nCR 培训图例梳写","CR互查 & 交流\nCR 培训图例梳写","CR互查 & 交流\nCR 培训图例梳写","CR互查 & 交流","/","协助内网申请&预算调整","CR互查 & 排错支持","技术项目协助人员提供，已OK"],"试产":["/","/","/","/","/","/","/","/","/","28","33","31","44","42","46","30","37","40","22","54","35","26","22","/"],"量产":["/","/","/","/","/","/","/","/","/","18","7","25","27","16","30","14","22","12","17","29","/","/","3","/"],"供应商 查BOM":["/","/","/","/","/","/","/","/","/","10","12","12","12","11","12","14","14","14","16","35","23","15","11","13"]},"projects":[{"name":"DBEF 量产导入","status":"进行中","schedules":[{"name":"开始","date":"2026-05-01"},{"name":"结束","date":"2026-07-31"}],"progress":80,"milestones":[{"name":"首件检查","date":"2026-06-10"},{"name":"量产试产","date":"2026-07-15"}],"todo":"完成产线试产验证，ECR导入","risk":"核心物料交期存在2天延迟","remark":"本周重点推进"},{"name":"Dell E系列SM制作","status":"已完成","schedules":[{"name":"开始","date":"2026-06-01"},{"name":"结束","date":"2026-06-20"}],"progress":100,"milestones":[{"name":"交付客户","date":"2026-06-06"}],"todo":"资料归档，SOP更新","risk":"无","remark":"已交付客户"},{"name":"MNT 结构辅材标准化","status":"有风险","schedules":[{"name":"开始","date":"2026-05-15"},{"name":"结束","date":"2026-08-30"}],"progress":60,"milestones":[{"name":"标准库更新","date":"2026-07-20"}],"todo":"推进供应商议价，更新标准库","risk":"供应商报价未达预期","remark":"需采购协助"}],"supportTasks":[{"task":"Dell 新机型 ECR 变更确认","schedule":"2026-11-10","status":"进行中","remark":"协助研发确认BOM变更点","note":"已完成80%"},{"task":"量产 CR 149笔数据复查","schedule":"2026-11-15","status":"已完成","remark":"数据已交接给品质部","note":"无"}],"smData":[{"name":"E2426H","customer":"Dell","schedule":{"EE":"5月19日","Power":"5月20日","FW":"5月22日","ME":"5月25日","Optical":"5月26日","LCM ME":"5月27日","Teardown Instruction":"5月26日"},"progress":{"EE":"ok","Power":"ok","FW":"ok","ME":"ok","Optical":"ok","LCM ME":"ok","Teardown Instruction":"ok"},"demandTime":"6月2日","submitTime":"6月2日","remark":""},{"name":"P2226H","customer":"Dell","schedule":{"EE":"5月20日","Power":"5月22日","FW":"5月26日","ME":"5月28日","Optical":"","LCM ME":"","Teardown Instruction":"5月28日"},"progress":{"EE":"ok","Power":"ok","FW":"ok","ME":"ok","Optical":"","LCM ME":"","Teardown Instruction":"ok"},"demandTime":"6月6日","submitTime":"6月4日","remark":""},{"name":"SE系列 *2","customer":"Dell","schedule":{"EE":"6月30日","Power":"7月2日","FW":"8月12日","ME":"7月6日","Optical":"7月8日","LCM ME":"7月10日","Teardown Instruction":"7月17日"},"progress":{"EE":"ok","Power":"ok","FW":"ok","ME":"ok","Optical":"ok","LCM ME":"ok","Teardown Instruction":"ok"},"demandTime":"8月20日","submitTime":"8月18日","remark":"SE2426HM、SE2726HM"},{"name":"E系列 *3","customer":"Dell","schedule":{"EE":"7月10日","Power":"7月14日","FW":"8月12日","ME":"7月20日","Optical":"7月22日","LCM ME":"7月24日","Teardown Instruction":"7月24日"},"progress":{"EE":"ok","Power":"ok","FW":"ok","ME":"ok","Optical":"ok","LCM ME":"ok","Teardown Instruction":"ok"},"demandTime":"8月25日","submitTime":"8月18日","remark":"E2426HM、E246HAM、E2726HM"}],"editKey":"钟梦娇"}</script>
+<script id="embeddedData" type="application/json">{"times":["1月","2月","3月","4月","5月-W1-3","5月-W4","6月-W1","6月-W2","6月-W3","7/1-7/8","7/9-7/15","7/16-7/22","7/23-7/29","7/30-8/5","8/6-8/12","8/13-8/19","8/20-8/26","8/27-9/2","9/3-9/9","9/10-9/30","10/8-10/16","10/19-10/23","10/26-10/30","11/2-11/6"],"taskRows":[{"name":"报销","group":"yellow"},{"name":"行政","group":"yellow"},{"name":"IT debug","group":"green"},{"name":"DBEF KPI","group":"green"},{"name":"结构模组标准化","group":"blue"},{"name":"售后BOM发行","group":"blue"},{"name":"售后BOM转厂","group":"blue"},{"name":"量产CR","group":"blue"},{"name":"简易SM","group":"gray"},{"name":"设备投资管理","group":"gray"},{"name":"杂 all","group":"gray"},{"name":"RFQ DTC","group":"blue"},{"name":"DR","group":"blue"},{"name":"PLM CR","group":"green"},{"name":"品质","group":"yellow"},{"name":"HR","group":"yellow"},{"name":"其他","group":"gray"},{"name":"试产","group":"blue"},{"name":"量产","group":"blue"},{"name":"供应商 查BOM","group":"blue"}],"taskData":{"报销":["/","/","/","/","出差：1","医疗理赔：1","团建费报销整理 ，待提交\n学籍费 ok\n医疗费 NG","团建费 ，已提单\n医疗费，ok","工会报销 - ok","报销*3","/","差旅*2","差旅*1","差旅*1","差旅*1","差旅*1","差旅 & 通讯 & 房租","学籍","报销-学籍\n9-11月报销 6万","差旅*2；通讯；房租\n学籍：9-11月报销 6万","差旅；通讯；房租\n学籍：10-11月报销 6万","10/E 学籍费 ok","11/E 学籍费 ok","差旅*3 通讯*2 房租 ok"],"行政":["/","/","2026年《行政安全责任书》签署","/","月报提交： 5/25\n半年度培训：5/27\n组织图相关资料调整：5/27","例行检查","/","6/16：培训会\n例月培训\n绿色打卡跟进","/","培训宣导","培训宣导","培训宣导","培训宣导*2","7/30 月巡 & 培训签字","培训宣导*1","培训宣导*1","培训宣导*1","培训宣导*1 & 例会","培训宣导*1","培训宣导*2 & 例会","培训宣导*1 & 例会 & 新品定价","例会*2 & 培训*1","巡检ok * 例会*1 *培训ok","10月KPI 已达标"],"IT debug":["/","/","/","/","RFQ 报价系统部署前置确认会：5/20\nRFQ 系统沟通会:5/13","BENQ RFQ报价 系统操作指导:5/26","add 两个优化项 ：6/5 部署","PLM 优化项 跟进： 3","RFQ 需求点提报 & 跟进","测试优化：第三版 7/3 部署优化\n采购担当清单导入，缺tco板和BOC 担当导入\ndebug 3次迭代；7/7 已上线运行","RFQ 担当问题维护跟进","/","/","/","PLM CR 功能需求，8/E上线；\n影响分析报表&报表性能优化，\n8/14部署上线","/","/","/","/","/","/","/","/","/"],"DBEF KPI":["/","/","信息共识：email发出","Y26国产化KPI方案-MNT终端产品线-DBEF 信息对标会","Y26国产化KPI方案-MNT终端产品线-DBEF 信息对标会 2\nDBEF 量产讨论会:5/11","状态：待入工单","/","/","DBEF ECR 导入 信息对标会 3：6/18","/","/","/","/","/","/","/","/","/","/","/","/","/","/"],"结构模组标准化":["/","/","/","/","模组结构膜材 标准库沟通会：5/21 11点","拉通模组光学数据提供：5/25","状态：供应商议价中","/","5/21： MNT 结构&模组结构辅材材料标准化会议记录，模组资料整理","/","/","/","/","/","/","/","/","/","/","/","/","/"],"售后BOM发行":["S01:1","/","S01:1","S01:1+1","S01 ：2 +1","S01:2","/","/","/","19","9","/","/","2","2","3","/","4","6","6","10","1","5","/"],"售后BOM转厂":["/","/","/","/","售后26371的模组邀请修改描述 ：3","/","/","/","/","7","/","/","/","/","/","/","/","/","0","/","/","/","/","/"],"量产CR":["/","/","/","/","CR：27","CR：7\nCR：11","CR:12 +8","CR：19","CR：15","/","/","/","/","/","/","/","/","/","/","/","/","/","/"],"简易SM":["/","/","/","/","Dell E2426H ：6/2\nDell P2226H ：6/6\n资料收集","Dell E2426H ：5/28 第一版","Dell E2426H ：6/2  OK \nDell P2226H ：6/6  ok\n资料整理","/","ACER_LCD_MN25310101_CB322Q V3 简易SM :6/16 OK","SE*2 ；E *3 ：收集ok","SE*2 ；E *3 ：确认OSD 7/31","SE*2 ；E *3 ：确认OSD 7/31","SE*2 ；E *3 ：FW OSD 8/12","SE*2 确认 8/7 ；E *3 ：FW OSD 8/12","SE*2 ；E *3 ：确认中 8/14","SE*2 ；E *3 ：8/18 ok","/","9-10月：9/8 收集中","/","/","Acer KA242YU A ","/","/","/"],"设备投资管理":["/","/","/","/","/","6/8 前收集一轮","/","/","/","7/9 软体需求*2 ；已发邮件","/","/","/","8/9 新一轮提报收集中","/","/","9-10月：9/8 收集中","9-10月：9/8 收集中","本次20W 投资无人提报","/","/","无人提报","/","27年事业计划预算跟进ok"],"杂 all":["2025年高企复审“开放式创新创业平台建设情况说明”资料收集","/","FW DR对外模板输出邀请","/","工会团建费提报 - 1W","派遣函盖章申请","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/"],"RFQ DTC":["ASUS:1\nHP:2\n三星：2\nLG:2\nDell：3","DTC 沟通会 2月3 17点 2-4\nIO DATA :1\nIIYAMA:1\nPlanic IC :3\nLenovo：1","IIYAMA:2\nLenovo:3\n三星:11\nASUS:2\nLG:15\nHP:4\nMI:4\nOTS极致低成本:4","MSI:3\nASUS:1\nMI:3\nWalmart：1\nAcer：2\n三星：20\nIIYAMA:1\n浪潮：1\nAcer：1\nbenQ :1\nLG :3\nASUS :1\nOTS :3","Acer：1\nbenQ：1","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/"],"DR":["SAMSUNG G31H 23.8&27：1/12","/","Walmart_23.8 FHD 144Hz ：3/10\nSAMSUNG 32G53H ： 3/10\nI-ODATA A系列21.45- 23.8- 27：3/24","联想 Legion 27Q＆U-20:4/29","Lenovo ： 资料整理\nLG ：TBD","Lenovo ： 5/25  & 系统流程发起","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/"],"PLM CR":["/","/","/","/","/","/","/","/","/","TBD","PLM CR 相关跟进&提单","/","MNT CR格式拉通ok","Portal 已确认 &PLM 需求提单开发中","/","/","/","PLM CR 功能测试：ok","PLM CR 功能测试 SOP ：ok\n编码 小数三位 ：待TV 进度确认","/","编码 小数三位 ：待TV 进度确认","编码 小数三位 ：待TV 进度确认","/","/"],"品质":["/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","9月7-8：应审跟进","/","/","/","/","11/1 S01 质量稽核"],"HR":["/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","/","新人答题宣导 & 考勤核实","考勤核实","考勤核实","考勤核实","考勤核实","10月KPI 已达标 "],"其他":["/","/","/","/","/","/","/","/","/","量产CR 复查*149笔","/","/","协助 CR SOP学习","培训档8/6：缺电子","/","AI 测试机：非生产领料单-提提","AI 测试机：非生产领料单-流程中\nCR互查 & 交流","CR互查 & 交流\nCR 培训图例梳写","CR互查 & 交流\nCR 培训图例梳写","CR互查 & 交流\nCR 培训图例梳写","CR互查 & 交流","/","协助内网申请&预算调整","CR互查 & 排错支持","技术项目协助人员提供，已OK"],"试产":["/","/","/","/","/","/","/","/","/","28","33","31","44","42","46","30","37","40","22","54","35","26","22","/"],"量产":["/","/","/","/","/","/","/","/","/","18","7","25","27","16","30","14","22","12","17","29","/","/","3","/"],"供应商 查BOM":["/","/","/","/","/","/","/","/","/","10","12","12","12","11","12","14","14","14","16","35","23","15","11","13"]},"projects":[{"name":"DBEF 量产导入","owner":"钟梦娇","status":"进行中","schedules":[{"name":"开始","date":"2026-05-01","owner":"钟梦娇","done":true},{"name":"结束","date":"2026-07-31","owner":"钟梦娇","done":false}],"progress":80,"milestones":[{"name":"首件检查","date":"2026-06-10","owner":"钟梦娇","done":true},{"name":"量产试产","date":"2026-07-15","owner":"李工","done":false}],"subTasks":[{"name":"ECR 系统导入","owner":"钟梦娇","date":"2026-06-18","status":"已完成","progress":100},{"name":"产线试产验证","owner":"李工","date":"2026-07-15","status":"进行中","progress":70},{"name":"核心物料交期跟进","owner":"采购-王","date":"2026-07-20","status":"有风险","progress":40}],"todo":"完成产线试产验证，ECR导入","risk":"核心物料交期存在2天延迟","remark":"本周重点推进"},{"name":"Dell E系列SM制作","owner":"钟梦娇","status":"已完成","schedules":[{"name":"开始","date":"2026-06-01","owner":"钟梦娇","done":true},{"name":"结束","date":"2026-06-20","owner":"钟梦娇","done":true}],"progress":100,"milestones":[{"name":"交付客户","date":"2026-06-06","owner":"钟梦娇","done":true}],"subTasks":[{"name":"资料收集与OSD确认","owner":"钟梦娇","date":"2026-06-04","status":"已完成","progress":100},{"name":"客户交付与归档","owner":"钟梦娇","date":"2026-06-06","status":"已完成","progress":100}],"todo":"资料归档，SOP更新","risk":"无","remark":"已交付客户"},{"name":"MNT 结构辅材标准化","owner":"钟梦娇","status":"有风险","schedules":[{"name":"开始","date":"2026-05-15","owner":"钟梦娇","done":true},{"name":"结束","date":"2026-08-30","owner":"钟梦娇","done":false}],"progress":60,"milestones":[{"name":"标准库更新","date":"2026-07-20","owner":"钟梦娇","done":false}],"subTasks":[{"name":"供应商议价","owner":"采购-王","date":"2026-07-15","status":"进行中","progress":50},{"name":"标准库更新发布","owner":"钟梦娇","date":"2026-08-15","status":"待开始","progress":0}],"todo":"推进供应商议价，更新标准库","risk":"供应商报价未达预期","remark":"需采购协助"}],"supportTasks":[{"task":"Dell 新机型 ECR 变更确认","schedule":"2026-11-10","status":"进行中","remark":"协助研发确认BOM变更点","note":"已完成80%"},{"task":"量产 CR 149笔数据复查","schedule":"2026-11-15","status":"已完成","remark":"数据已交接给品质部","note":"无"}],"smData":[{"name":"E2426H","customer":"Dell","schedule":{"EE":"5月19日","Power":"5月20日","FW":"5月22日","ME":"5月25日","Optical":"5月26日","LCM ME":"5月27日","Teardown Instruction":"5月26日"},"progress":{"EE":"ok","Power":"ok","FW":"ok","ME":"ok","Optical":"ok","LCM ME":"ok","Teardown Instruction":"ok"},"demandTime":"6月2日","submitTime":"6月2日","remark":""},{"name":"P2226H","customer":"Dell","schedule":{"EE":"5月20日","Power":"5月22日","FW":"5月26日","ME":"5月28日","Optical":"","LCM ME":"","Teardown Instruction":"5月28日"},"progress":{"EE":"ok","Power":"ok","FW":"ok","ME":"ok","Optical":"","LCM ME":"","Teardown Instruction":"ok"},"demandTime":"6月6日","submitTime":"6月4日","remark":""},{"name":"SE系列 *2","customer":"Dell","schedule":{"EE":"6月30日","Power":"7月2日","FW":"8月12日","ME":"7月6日","Optical":"7月8日","LCM ME":"7月10日","Teardown Instruction":"7月17日"},"progress":{"EE":"ok","Power":"ok","FW":"ok","ME":"ok","Optical":"ok","LCM ME":"ok","Teardown Instruction":"ok"},"demandTime":"8月20日","submitTime":"8月18日","remark":"SE2426HM、SE2726HM"},{"name":"E系列 *3","customer":"Dell","schedule":{"EE":"7月10日","Power":"7月14日","FW":"8月12日","ME":"7月20日","Optical":"7月22日","LCM ME":"7月24日","Teardown Instruction":"7月24日"},"progress":{"EE":"ok","Power":"ok","FW":"ok","ME":"ok","Optical":"ok","LCM ME":"ok","Teardown Instruction":"ok"},"demandTime":"8月25日","submitTime":"8月18日","remark":"E2426HM、E246HAM、E2726HM"}],"editKey":"钟梦娇"}</script>
 </head>
 <body>
     <div class="container">
-        <h1>Y26 JOB - 钟梦娇</h1>
+        <div class="page-head">
+            <div>
+                <h1>Y26 JOB · 工作看板</h1>
+                <div class="page-sub">钟梦娇 · 年度项目与任务追踪</div>
+            </div>
+            <span id="saveStatus" class="save-status"><span class="dot"></span>就绪</span>
+        </div>
         <div id="fileProtoTip" class="file-tip" style="display: none;">⚠️ 当前通过 file:// 本地打开，浏览器可能在清理缓存时清空本地数据；建议部署到 GitHub Pages 等 HTTPS 环境长期保存。</div>
         <div id="readonlyTip" class="readonly-tip" style="display: none;">🔒 当前为【只读查看模式】。<button class="btn success view-btn" onclick="unlockEdit()">输入密钥解锁编辑</button></div>
 
-        <!-- ===== 1. 项目看板 ===== -->
+        <!-- 0. 今日聚焦 -->
+        <div class="card focus-card">
+            <div class="card-title">
+                <span class="title-left"><span class="title-badge">🎯</span>今日看点</span>
+                <div class="focus-summary" id="focusSummary"></div>
+            </div>
+            <div class="focus-list" id="focusList"></div>
+        </div>
+
+        <!-- 1. 项目看板 -->
         <div class="card">
             <div class="card-title">
-                <span>🚀 项目看板</span>
+                <span class="title-left"><span class="title-badge">🚀</span>项目看板</span>
                 <div class="btn-group">
+                    <button class="btn btn-pink edit-btn" onclick="saveData(true)">💾 保存内容</button>
                     <button class="btn edit-btn" onclick="addProject()">+ 新增项目</button>
                 </div>
             </div>
-
-            <!-- 项目概览数据 -->
-            <div class="project-overview" id="projectOverview">
-                <!-- 动态渲染 -->
-            </div>
-
+            <div class="project-overview" id="projectOverview"></div>
             <div class="table-wrap">
                 <table class="project-table">
                     <thead>
                         <tr>
-                            <th width="12%">项目名称</th>
-                            <th width="8%">状态</th>
-                            <th width="16%">日程 (支持新增)</th>
-                            <th width="10%">进度</th>
-                            <th width="18%">关键节点 (支持新增)</th>
-                            <th width="14%">待办</th>
-                            <th width="10%">风险点</th>
-                            <th width="12%">备注</th>
-                            <th width="6%">操作</th>
+                            <th width="13%">项目名称 / 担当</th>
+                            <th width="6%">状态</th>
+                            <th width="16%">日程事项</th>
+                            <th width="9%">整体进度</th>
+                            <th width="17%">关键节点</th>
+                            <th width="20%">细化追踪（子事项）</th>
+                            <th width="19%">风险点 / 备注</th>
                         </tr>
                     </thead>
                     <tbody id="projectBody"></tbody>
@@ -245,11 +417,12 @@
             </div>
         </div>
 
-        <!-- ===== 2. 协助事项 ===== -->
+        <!-- 2. 协助事项 -->
         <div class="card">
             <div class="card-title">
-                <span>🤝 协助事项</span>
+                <span class="title-left"><span class="title-badge">🤝</span>协助事项</span>
                 <div class="btn-group">
+                    <button class="btn btn-pink edit-btn" onclick="saveData(true)">💾 保存内容</button>
                     <button class="btn edit-btn" onclick="addSupportTask()">+ 新增协助</button>
                 </div>
             </div>
@@ -270,48 +443,54 @@
             </div>
         </div>
 
-        <!-- ===== 3. 图表模块 ===== -->
+        <!-- 3. 图表模块 -->
         <div class="card">
             <div class="filter-bar">
                 <span>时间段</span>
                 <select id="startTime"></select>
                 <span>至</span>
                 <select id="endTime"></select>
-
                 <div class="tab-group">
                     <button class="tab-btn active" onclick="switchMetric('default', this)">📈 常规工作</button>
                     <button class="tab-btn" onclick="switchMetric('rfq', this)">📊 RFQ DTC</button>
                     <button class="tab-btn" onclick="switchMetric('dr', this)">📅 DR 节点</button>
                     <button class="tab-btn" onclick="switchMetric('project', this)">🚀 项目数据</button>
                 </div>
-
-                <button class="btn view-btn btn-pink" onclick="resetFilter()">重置筛选</button>
+                <button class="btn btn-pink view-btn" onclick="resetFilter()">重置筛选</button>
                 <div class="btn-group" style="margin-left: auto;">
-                    <button class="btn edit-btn btn-pink" onclick="saveData(true)">💾 保存内容</button>
-                    <button class="btn edit-btn btn-pink" onclick="saveHtmlFile()">💾 保存HTML(含数据)</button>
-                    <button class="btn edit-btn btn-pink" onclick="exportBackup()">📥 数据备份(json)</button>
-                    <button class="btn view-btn btn-pink" onclick="document.getElementById('importFile').click()">📤 恢复备份</button>
+                    <button class="btn btn-pink edit-btn" onclick="saveData(true)">💾 保存内容</button>
+                    <button class="btn btn-pink edit-btn" onclick="saveHtmlFile()">💾 保存HTML</button>
+                    <button class="btn btn-pink edit-btn" onclick="exportBackup()">📥 数据备份</button>
+                    <button class="btn btn-pink view-btn" onclick="document.getElementById('importFile').click()">📤 恢复备份</button>
                     <input type="file" id="importFile" accept=".json" onchange="importBackup(event)">
-                    <button class="btn edit-btn btn-pink" onclick="openKeySetting()">⚙️ 设置访问密钥</button>
+                    <button class="btn btn-pink edit-btn" onclick="openKeySetting()">⚙️ 访问密钥</button>
                 </div>
             </div>
-
             <div class="chart-indicator" id="chartTitleTip">当前指标：常规工作完成量走势（折线图）</div>
+            <div class="chart-legend" id="chartLegend" style="display:none;">
+                <span class="lg-item"><i class="lg-dot sch-done"></i>SCH 已完成</span>
+                <span class="lg-item"><i class="lg-dot sch-todo"></i>SCH 待完成</span>
+                <span class="lg-item"><i class="lg-diamond ms-done"></i>节点完成</span>
+                <span class="lg-item"><i class="lg-diamond ms-overdue"></i>节点超时</span>
+                <span class="lg-item"><i class="lg-today"></i>今天</span>
+            </div>
             <div id="mainChart"></div>
             <div class="summary-row" id="summaryRow"></div>
         </div>
 
-        <!-- ===== 4. 工作任务明细表 ===== -->
+        <!-- 4. 工作任务明细表 -->
         <div class="card">
             <div class="card-title">
-                <span>工作任务明细表（首列冻结 · 编辑自动保存）</span>
+                <span class="title-left"><span class="title-badge">📋</span>工作任务明细表</span>
                 <div class="btn-group">
-                    <button class="btn edit-btn" onclick="saveData(true)">💾 保存</button>
+                    <input type="text" class="quick-search edit-btn" id="taskFilter" placeholder="搜索任务行…" oninput="applyTaskFilter(this.value)">
+                    <button class="btn btn-pink edit-btn" onclick="saveData(true)">💾 保存</button>
                     <button class="btn edit-btn" onclick="addNewWeek()">+ 新增一周</button>
                     <button class="btn edit-btn" onclick="addTaskRow()">+ 新增任务行</button>
                     <button class="btn danger edit-btn" onclick="resetData()">重置数据</button>
                 </div>
             </div>
+            <div class="group-bar" id="groupBar"></div>
             <div class="task-table-wrap">
                 <table class="task-table" id="taskTable">
                     <thead><tr id="taskHead"></tr></thead>
@@ -320,11 +499,12 @@
             </div>
         </div>
 
+        <!-- 5. SM 跟踪 -->
         <div class="card">
             <div class="card-title">
-                <span>SM制作跟踪（首列冻结 · 编辑自动保存）</span>
+                <span class="title-left"><span class="title-badge">📑</span>SM制作跟踪</span>
                 <div class="btn-group">
-                    <button class="btn edit-btn" onclick="saveData(true)">💾 保存</button>
+                    <button class="btn btn-pink edit-btn" onclick="saveData(true)">💾 保存</button>
                     <button class="btn edit-btn" onclick="addSmProject()">+ 新增项目</button>
                 </div>
             </div>
@@ -350,12 +530,22 @@
             { name: "售后BOM转厂", color: "#f56c6c" }
         ];
         const STORAGE_KEY = 'weekReport_zhongmengjiao_v21';
+        const groupDefaultColors = { green: '#e8f4e8', yellow: '#fff7e6', gray: '#f0f0f3', blue: '#e6f4f5' };
         let chartData = { times: [], taskRows: [], taskData: {}, projects: [], supportTasks: [], smData: [], editKey:"" };
         let myChart;
         let isEditMode = false;
         let saveDebounceTimer = null;
         let chartDebounceTimer = null;
         let currentMetric = 'default';
+        let dragState = { type: null, from: null };
+        let toastTimer = null;
+        let collapsedGroups = {};
+        const groupMeta = {
+            blue: { label: "蓝组", color: "#e6f4f5" },
+            green: { label: "绿组", color: "#e8f4e8" },
+            yellow: { label: "黄组", color: "#fff7e6" },
+            gray: { label: "灰组", color: "#f0f0f3" }
+        };
 
         /* ================= 通用工具 ================= */
         function escapeHtml(val) {
@@ -369,12 +559,23 @@
 
         function autoResize(el) {
             if (!el) return;
-            // 先归零，保证删除文字后能正确收缩；下一帧再赋目标高度，避免闪烁
             el.style.height = '0px';
             const targetHeight = el.scrollHeight;
-            requestAnimationFrame(function () {
-                el.style.height = targetHeight + 'px';
-            });
+            requestAnimationFrame(function () { el.style.height = targetHeight + 'px'; });
+        }
+
+        function showToast(msg, type) {
+            let box = document.getElementById('toast');
+            if (!box) {
+                box = document.createElement('div');
+                box.id = 'toast';
+                document.body.appendChild(box);
+            }
+            box.className = 'toast ' + (type || 'info');
+            box.textContent = msg;
+            box.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(function () { box.classList.remove('show'); }, 2200);
         }
 
         function safeSaveToLocalStorage(key, valueObj) {
@@ -382,16 +583,33 @@
                 localStorage.setItem(key, JSON.stringify(valueObj));
                 return true;
             } catch (e) {
-                alert("⚠️保存失败:" + e.message); return false;
+                showToast('保存失败：' + e.message, 'error');
+                return false;
             }
         }
 
-        function debounceSave(showTip) {
-            clearTimeout(saveDebounceTimer);
-            saveDebounceTimer = window.setTimeout(function(){ saveData(showTip); }, 500);
+        function markDirty() {
+            const el = document.getElementById('saveStatus');
+            if (!el) return;
+            el.className = 'save-status dirty';
+            el.innerHTML = '<span class="dot"></span>编辑中…';
+        }
+        function markSaved() {
+            const el = document.getElementById('saveStatus');
+            if (!el) return;
+            const t = new Date();
+            const hh = String(t.getHours()).padStart(2, '0');
+            const mm = String(t.getMinutes()).padStart(2, '0');
+            el.className = 'save-status saved';
+            el.innerHTML = '<span class="dot"></span>已保存 ' + hh + ':' + mm;
         }
 
-        // 图表更新防抖：打字/拖动时不立即重绘 ECharts，避免卡顿
+        function debounceSave(showTip) {
+            markDirty();
+            clearTimeout(saveDebounceTimer);
+            saveDebounceTimer = window.setTimeout(function () { saveData(showTip); }, 500);
+        }
+
         function debounceChartRefresh() {
             clearTimeout(chartDebounceTimer);
             chartDebounceTimer = window.setTimeout(function () {
@@ -400,12 +618,111 @@
             }, 300);
         }
 
-        // 纯字符串日期（YYYY-MM-DD），字典序比较，规避时区/时分秒偏差
         function getTodayStr() {
             const d = new Date();
             const m = String(d.getMonth() + 1).padStart(2, '0');
             const day = String(d.getDate()).padStart(2, '0');
             return d.getFullYear() + '-' + m + '-' + day;
+        }
+
+        /* 日期状态：done 已完成 / overdue 超时 / soon 3天内临近 / normal 正常 */
+        function getDateState(dateStr, done) {
+            if (!dateStr) return 'normal';
+            if (done) return 'done';
+            const todayStr = getTodayStr();
+            if (dateStr < todayStr) return 'overdue';
+            const base = new Date(todayStr + 'T00:00:00');
+            const lim = new Date(base.getTime() + 3 * 86400000);
+            const limStr = lim.getFullYear() + '-' + String(lim.getMonth() + 1).padStart(2, '0') + '-' + String(lim.getDate()).padStart(2, '0');
+            if (dateStr <= limStr) return 'soon';
+            return 'normal';
+        }
+        function dateStateClass(state) {
+            if (state === 'overdue') return 'overdue-input';
+            if (state === 'soon') return 'soon-input';
+            return '';
+        }
+        function dateStateTip(state) {
+            if (state === 'overdue') return '<span class="overdue-tip">⚠️超时</span>';
+            if (state === 'soon') return '<span class="soon-tip">3天内</span>';
+            return '';
+        }
+
+        function pickTextColor(hex) {
+            const c = String(hex).replace('#', '');
+            if (c.length !== 6) return '#1c2736';
+            const r = parseInt(c.substr(0, 2), 16);
+            const g = parseInt(c.substr(2, 2), 16);
+            const b = parseInt(c.substr(4, 2), 16);
+            return (0.299 * r + 0.587 * g + 0.114 * b) > 160 ? '#1c2736' : '#ffffff';
+        }
+
+        /* ================= 拖拽排序 ================= */
+        function getCollection(type) {
+            if (type === 'project') return chartData.projects;
+            if (type === 'support') return chartData.supportTasks;
+            if (type === 'task') return chartData.taskRows;
+            if (type === 'sm') return chartData.smData;
+            return null;
+        }
+
+        function bindRowDrag(tr, type, idx) {
+            tr.draggable = true;
+            tr.addEventListener('dragstart', function (e) {
+                if (!isEditMode || !e.target.closest('.drag-handle')) { e.preventDefault(); return; }
+                dragState = { type: type, from: idx };
+                tr.classList.add('dragging');
+                document.body.classList.add('drag-in-progress');
+                e.dataTransfer.effectAllowed = 'move';
+                try { e.dataTransfer.setData('text/plain', type + ':' + idx); } catch (err) {}
+            });
+            tr.addEventListener('dragover', function (e) {
+                if (dragState.type !== type) return;
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                const rect = tr.getBoundingClientRect();
+                const after = (e.clientY - rect.top) > rect.height / 2;
+                tr.classList.toggle('drag-over-bottom', after);
+                tr.classList.toggle('drag-over-top', !after);
+            });
+            tr.addEventListener('dragleave', function () {
+                tr.classList.remove('drag-over-top', 'drag-over-bottom');
+            });
+            tr.addEventListener('drop', function (e) {
+                if (dragState.type !== type) return;
+                e.preventDefault();
+                e.stopPropagation();
+                const rect = tr.getBoundingClientRect();
+                const after = (e.clientY - rect.top) > rect.height / 2;
+                reorderCollection(type, dragState.from, idx, after);
+            });
+            tr.addEventListener('dragend', function () {
+                document.body.classList.remove('drag-in-progress');
+                document.querySelectorAll('.dragging,.drag-over-top,.drag-over-bottom').forEach(function (el) {
+                    el.classList.remove('dragging', 'drag-over-top', 'drag-over-bottom');
+                });
+                dragState = { type: null, from: null };
+            });
+        }
+
+        function reorderCollection(type, from, targetIdx, after) {
+            const list = getCollection(type);
+            if (!list || from === null || from === undefined) return;
+            let targetPos = after ? targetIdx + 1 : targetIdx;
+            if (from === targetPos) { finishReorder(type); return; }
+            const moved = list.splice(from, 1)[0];
+            if (from < targetPos) targetPos--;
+            targetPos = Math.max(0, Math.min(targetPos, list.length));
+            list.splice(targetPos, 0, moved);
+            saveData();
+            finishReorder(type);
+        }
+
+        function finishReorder(type) {
+            if (type === 'project') { renderProjects(); if (currentMetric === 'project') debounceChartRefresh(); }
+            else if (type === 'support') renderSupportTasks();
+            else if (type === 'task') renderTaskTable();
+            else if (type === 'sm') renderSmTable();
         }
 
         /* ================= 数据兜底与加载 ================= */
@@ -419,31 +736,47 @@
             d.smData = Array.isArray(d.smData) ? d.smData : [];
             if (typeof d.editKey !== 'string') d.editKey = '';
 
-            // 兼容旧格式项目数据
             d.projects.forEach(function (p) {
+                if (typeof p.owner !== 'string') p.owner = '';
                 if (!Array.isArray(p.schedules)) {
                     p.schedules = [];
-                    if (p.startDate) p.schedules.push({ name: "开始", date: p.startDate });
-                    if (p.endDate) p.schedules.push({ name: "结束", date: p.endDate });
+                    if (p.startDate) p.schedules.push({ name: "开始", date: p.startDate, owner: '', done: false });
+                    if (p.endDate) p.schedules.push({ name: "结束", date: p.endDate, owner: '', done: false });
                     delete p.startDate; delete p.endDate;
                 }
                 if (!Array.isArray(p.milestones)) {
                     p.milestones = [];
-                    if (p.milestoneDate) p.milestones.push({ name: p.milestoneName || "节点", date: p.milestoneDate });
+                    if (p.milestoneDate) p.milestones.push({ name: p.milestoneName || "节点", date: p.milestoneDate, owner: '', done: false });
                     delete p.milestoneName; delete p.milestoneDate;
                 }
+                p.schedules.forEach(function (s) {
+                    if (typeof s.owner !== 'string') s.owner = '';
+                    if (typeof s.done !== 'boolean') s.done = false;
+                });
+                p.milestones.forEach(function (s) {
+                    if (typeof s.owner !== 'string') s.owner = '';
+                    if (typeof s.done !== 'boolean') s.done = false;
+                });
+                if (!Array.isArray(p.subTasks)) p.subTasks = [];
+                p.subTasks.forEach(function (s) {
+                    if (typeof s.name !== 'string') s.name = '';
+                    if (typeof s.owner !== 'string') s.owner = '';
+                    if (typeof s.date !== 'string') s.date = '';
+                    if (typeof s.status !== 'string') s.status = '待开始';
+                    if (s.progress === undefined || s.progress === null || isNaN(Number(s.progress))) s.progress = 0;
+                    else s.progress = Number(s.progress);
+                });
                 if (p.progress === undefined || p.progress === null || isNaN(Number(p.progress))) p.progress = 0;
                 else p.progress = Number(p.progress);
             });
 
-            // 任务行数组长度与时间段对齐，缺失自动补 “/”
             const colCount = d.times.length;
             d.taskRows.forEach(function (r) {
+                if (typeof r.color !== 'string') r.color = '';
                 if (!Array.isArray(d.taskData[r.name])) d.taskData[r.name] = new Array(colCount).fill('/');
                 while (d.taskData[r.name].length < colCount) d.taskData[r.name].push('/');
             });
 
-            // SM 项目字段兜底，客户缺失统一为“未指定”
             d.smData.forEach(function (p) {
                 p.schedule = (p.schedule && typeof p.schedule === 'object') ? p.schedule : {};
                 p.progress = (p.progress && typeof p.progress === 'object') ? p.progress : {};
@@ -464,7 +797,6 @@
             const savedStr = localStorage.getItem(STORAGE_KEY);
             if (savedStr) { try { saved = normalizeData(JSON.parse(savedStr)); } catch (e) {} }
 
-            // 本地保存优先；本地没有可用数据时才回退到初始数据，杜绝“初始数据反杀”
             if (saved) chartData = saved;
             else if (embedded) chartData = embedded;
             else chartData = { times: [], taskRows: [], taskData: {}, projects: [], supportTasks: [], smData: [], editKey: "" };
@@ -478,8 +810,6 @@
             const str = String(val).trim();
             const num = Number(str);
             if (!isNaN(num)) return num;
-            // 非纯数字（如“差旅*2”“售后26371…：3”）：数量在文字/冒号之后，
-            // 取最后一个数字，避免前面的型号编号被误统计
             const all = str.match(/\d+(\.\d+)?/g);
             if (!all) return 0;
             return Number(all[all.length - 1]);
@@ -489,23 +819,27 @@
             if (showTip === undefined) showTip = false;
             chartData.lastSaved = Date.now();
             const ok = safeSaveToLocalStorage(STORAGE_KEY, chartData);
-            if (showTip && ok) alert("✅ 内容已保存到本地");
+            if (ok) {
+                markSaved();
+                if (showTip) showToast('内容已保存到本地', 'success');
+            }
         }
 
-        // ================= 项目看板逻辑 =================
+        /* ================= 项目看板 ================= */
         function renderProjects() {
             const tbody = document.getElementById('projectBody');
             const overviewBox = document.getElementById('projectOverview');
             tbody.innerHTML = '';
 
             let countTotal = chartData.projects.length;
-            let countOngoing = 0, countDone = 0, countRisk = 0;
+            let countOngoing = 0, countDone = 0, countRisk = 0, progressSum = 0;
             const today = getTodayStr();
 
             chartData.projects.forEach(function (proj, idx) {
                 if (proj.status === '进行中') countOngoing++;
                 if (proj.status === '已完成') countDone++;
                 if (proj.status === '有风险') countRisk++;
+                progressSum += (proj.progress || 0);
 
                 const tr = document.createElement('tr');
 
@@ -518,43 +852,91 @@
                 if (proj.progress >= 100) progColor = "progress-fill-green";
                 if (proj.status === "有风险" || proj.status === "已延期") progColor = "progress-fill-red";
 
-                // 渲染动态日程
                 let scheduleHtml = '';
                 proj.schedules.forEach(function (sch, sIdx) {
+                    const schState = getDateState(sch.date, sch.done);
                     scheduleHtml += `
-                        <div class="dynamic-row">
-                            <input type="text" class="proj-input" value="${escapeHtml(sch.name)}" onchange="updateSchedule(${idx}, ${sIdx}, 'name', this.value)" placeholder="名称">
-                            <input type="date" class="proj-input" value="${escapeHtml(sch.date)}" onchange="updateSchedule(${idx}, ${sIdx}, 'date', this.value)">
-                            <span class="op-btn" onclick="delSchedule(${idx}, ${sIdx})">×</span>
+                        <div class="event-card ${sch.done ? 'is-done' : ''}">
+                            <div class="ev-line">
+                                <input type="checkbox" class="done-check" ${sch.done ? 'checked' : ''} onchange="toggleScheduleDone(${idx},${sIdx},this.checked)" title="完成">
+                                <input type="text" class="proj-input ev-name" value="${escapeHtml(sch.name)}" onchange="updateSchedule(${idx}, ${sIdx}, 'name', this.value)" placeholder="事项名称">
+                                <span class="op-btn" onclick="delSchedule(${idx}, ${sIdx})">×</span>
+                            </div>
+                            <div class="ev-line">
+                                <input type="date" class="proj-input ev-date ${dateStateClass(schState)}" value="${escapeHtml(sch.date)}" onchange="updateSchedule(${idx}, ${sIdx}, 'date', this.value)">
+                                <input type="text" class="proj-input ev-owner" value="${escapeHtml(sch.owner)}" onchange="updateSchedule(${idx}, ${sIdx}, 'owner', this.value)" placeholder="担当">
+                                ${dateStateTip(schState)}
+                            </div>
                         </div>
                     `;
                 });
-                scheduleHtml += `<span class="btn-add" onclick="addSchedule(${idx})">+ 添加</span>`;
+                scheduleHtml += `<span class="btn-add" onclick="addSchedule(${idx})">+ 添加日程</span>`;
 
-                // 渲染动态关键节点及超时判断（纯字符串日期比较）
                 let milestoneHtml = '';
                 let hasOverdue = false;
                 proj.milestones.forEach(function (ms, mIdx) {
-                    let isOverdue = false;
-                    if (ms.date && proj.status !== '已完成' && ms.date < today) {
-                        isOverdue = true; hasOverdue = true;
-                    }
-                    let dateClass = isOverdue ? "overdue-input" : "";
+                    const msState = getDateState(ms.date, ms.done);
+                    if (msState === 'overdue') hasOverdue = true;
                     milestoneHtml += `
-                        <div class="dynamic-row">
-                            <input type="text" class="proj-input" value="${escapeHtml(ms.name)}" onchange="updateMilestone(${idx}, ${mIdx}, 'name', this.value, event)" placeholder="如:首件">
-                            <input type="date" class="proj-input ${dateClass}" value="${escapeHtml(ms.date)}" onchange="updateMilestone(${idx}, ${mIdx}, 'date', this.value, event)">
-                            ${isOverdue ? '<span class="overdue-tip">⚠️超时</span>' : ''}
-                            <span class="op-btn" onclick="delMilestone(${idx}, ${mIdx})">×</span>
+                        <div class="event-card ${ms.done ? 'is-done' : ''}">
+                            <div class="ev-line">
+                                <input type="checkbox" class="done-check" ${ms.done ? 'checked' : ''} onchange="toggleMilestoneDone(${idx},${mIdx},this.checked,event)" title="完成">
+                                <input type="text" class="proj-input ev-name" value="${escapeHtml(ms.name)}" onchange="updateMilestone(${idx}, ${mIdx}, 'name', this.value, event)" placeholder="节点名称">
+                                <span class="op-btn" onclick="delMilestone(${idx}, ${mIdx})">×</span>
+                            </div>
+                            <div class="ev-line">
+                                <input type="date" class="proj-input ev-date ${dateStateClass(msState)}" value="${escapeHtml(ms.date)}" onchange="updateMilestone(${idx}, ${mIdx}, 'date', this.value, event)">
+                                <input type="text" class="proj-input ev-owner" value="${escapeHtml(ms.owner)}" onchange="updateMilestone(${idx}, ${mIdx}, 'owner', this.value, event)" placeholder="担当">
+                                ${dateStateTip(msState)}
+                            </div>
                         </div>
                     `;
                 });
-                milestoneHtml += `<span class="btn-add" onclick="addMilestone(${idx})">+ 添加</span>`;
+                milestoneHtml += `<span class="btn-add" onclick="addMilestone(${idx})">+ 添加节点</span>`;
+
+                let subHtml = '';
+                proj.subTasks.forEach(function (st, tIdx) {
+                    const blockClass = 'st-' + (st.status === '待开始' ? 'todo' : st.status === '进行中' ? 'ongoing' : st.status === '已完成' ? 'done' : 'risk');
+                    const subState = getDateState(st.date, st.status === '已完成');
+                    subHtml += `
+                        <div class="subtask-block ${blockClass}">
+                            <div class="dynamic-row" style="margin-bottom:3px;">
+                                <input type="text" class="proj-input" value="${escapeHtml(st.name)}" onchange="updateSubTask(${idx},${tIdx},'name',this.value)" placeholder="子事项">
+                                <span class="op-btn" onclick="delSubTask(${idx},${tIdx})">×</span>
+                            </div>
+                            <div class="dynamic-row" style="margin-bottom:3px;">
+                                <input type="text" class="proj-input owner-input" value="${escapeHtml(st.owner)}" onchange="updateSubTask(${idx},${tIdx},'owner',this.value)" placeholder="担当">
+                                <input type="date" class="proj-input ${dateStateClass(subState)}" value="${escapeHtml(st.date)}" onchange="updateSubTask(${idx},${tIdx},'date',this.value)">
+                            </div>
+                            <select class="status-select mini status-${st.status === '待开始' ? 'todo' : st.status === '进行中' ? 'ongoing' : st.status === '已完成' ? 'done' : 'risk'}" onchange="updateSubTask(${idx},${tIdx},'status',this.value)">
+                                <option value="待开始" ${st.status==='待开始'?'selected':''}>待开始</option>
+                                <option value="进行中" ${st.status==='进行中'?'selected':''}>进行中</option>
+                                <option value="已完成" ${st.status==='已完成'?'selected':''}>已完成</option>
+                                <option value="有风险" ${st.status==='有风险'?'selected':''}>有风险</option>
+                            </select>
+                            <div class="subtask-progress">
+                                <input type="range" min="0" max="100" value="${st.progress || 0}" oninput="updateSubTaskSlider(this)" onchange="updateSubTask(${idx},${tIdx},'progress',this.value)">
+                                <span class="pct">${st.progress || 0}%</span>
+                            </div>
+                        </div>
+                    `;
+                });
+                subHtml += `<span class="btn-add" onclick="addSubTask(${idx})">+ 添加子事项</span>`;
 
                 let nameClass = (hasOverdue && proj.status !== '已完成') ? "title-risk" : "";
 
                 tr.innerHTML = `
-                    <td><textarea class="proj-textarea ${nameClass}" rows="1" oninput="autoResize(this)" onchange="updateProject(${idx}, 'name', this.value)" placeholder="项目名称">${escapeHtml(proj.name)}</textarea></td>
+                    <td>
+                        <div class="proj-name-row">
+                            <textarea class="proj-textarea ${nameClass}" rows="1" oninput="autoResize(this)" onchange="updateProject(${idx}, 'name', this.value)" placeholder="项目名称">${escapeHtml(proj.name)}</textarea>
+                            <div class="op-btns">
+                                <span class="drag-handle" title="拖拽排序">⠿</span>
+                                <span class="op-btn del" onclick="deleteProject(${idx})" title="删除">×</span>
+                            </div>
+                        </div>
+                        <div class="field-hint">担当</div>
+                        <input type="text" class="proj-input" value="${escapeHtml(proj.owner)}" onchange="updateProject(${idx}, 'owner', this.value)" placeholder="项目担当">
+                    </td>
                     <td>
                         <select class="status-select ${statusClass}" onchange="updateProject(${idx}, 'status', this.value)">
                             <option value="待开始" ${proj.status==='待开始'?'selected':''}>待开始</option>
@@ -569,35 +951,44 @@
                             <div class="progress-bar-bg"><div class="progress-bar-fill ${progColor}" style="width: ${proj.progress || 0}%"></div></div>
                             <span class="progress-num">${proj.progress || 0}%</span>
                         </div>
-                        <input type="range" min="0" max="100" value="${proj.progress || 0}" oninput="updateProjectSlider(this, ${idx})" onchange="updateProject(${idx}, 'progress', this.value)" class="range-input">
+                        <input type="range" min="0" max="100" value="${proj.progress || 0}" oninput="updateProjectSlider(this)" onchange="updateProject(${idx}, 'progress', this.value)" class="range-input">
+                        <button class="btn-mini edit-btn" style="margin-top:7px;" onclick="calcProgressFromSubs(${idx})">子项汇总</button>
                     </td>
                     <td>${milestoneHtml}</td>
-                    <td><textarea class="proj-textarea" rows="1" oninput="autoResize(this)" onchange="updateProject(${idx}, 'todo', this.value)" placeholder="待办">${escapeHtml(proj.todo)}</textarea></td>
-                    <td><textarea class="proj-textarea" rows="1" oninput="autoResize(this)" onchange="updateProject(${idx}, 'risk', this.value)" placeholder="风险点">${escapeHtml(proj.risk)}</textarea></td>
-                    <td><textarea class="proj-textarea" rows="1" oninput="autoResize(this)" onchange="updateProject(${idx}, 'remark', this.value)" placeholder="备注">${escapeHtml(proj.remark)}</textarea></td>
+                    <td>${subHtml}</td>
                     <td>
-                        <div class="op-btns">
-                            <span class="op-btn" onclick="moveProject(${idx}, -1)" title="上移">↑</span>
-                            <span class="op-btn" onclick="moveProject(${idx}, 1)" title="下移">↓</span>
-                            <span class="op-btn del" onclick="deleteProject(${idx})" title="删除">×</span>
+                        <div class="rr-cell">
+                            <span class="rr-label">风险点</span>
+                            <textarea class="proj-textarea" rows="1" oninput="autoResize(this)" onchange="updateProject(${idx}, 'risk', this.value)" placeholder="风险点">${escapeHtml(proj.risk)}</textarea>
+                            <span class="rr-label">备注</span>
+                            <textarea class="proj-textarea" rows="1" oninput="autoResize(this)" onchange="updateProject(${idx}, 'remark', this.value)" placeholder="备注">${escapeHtml(proj.remark)}</textarea>
                         </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
+                bindRowDrag(tr, 'project', idx);
             });
 
+            if (countTotal === 0) {
+                tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state">暂无项目，点击右上角“+ 新增项目”开始追踪</div></td></tr>';
+            }
+
+            const avgProgress = countTotal ? Math.round(progressSum / countTotal) : 0;
             overviewBox.innerHTML = `
-                <div class="ov-card" style="border-left-color: #409eff;"><div class="num">${countTotal}</div><div class="label">总项目数</div></div>
-                <div class="ov-card" style="border-left-color: #1890ff;"><div class="num" style="color:#1890ff">${countOngoing}</div><div class="label">进行中</div></div>
-                <div class="ov-card" style="border-left-color: #52c41a;"><div class="num" style="color:#52c41a">${countDone}</div><div class="label">已完成</div></div>
-                <div class="ov-card" style="border-left-color: #f5222d;"><div class="num" style="color:#f5222d">${countRisk}</div><div class="label">有风险</div></div>
+                <div class="ov-card" style="border-left-color:var(--primary);"><div class="num">${countTotal}</div><div class="label">总项目数</div></div>
+                <div class="ov-card" style="border-left-color:var(--primary);"><div class="num" style="color:var(--primary)">${countOngoing}</div><div class="label">进行中</div></div>
+                <div class="ov-card" style="border-left-color:var(--success);"><div class="num" style="color:var(--success)">${countDone}</div><div class="label">已完成</div></div>
+                <div class="ov-card" style="border-left-color:var(--danger);"><div class="num" style="color:var(--danger)">${countRisk}</div><div class="label">有风险</div></div>
+                <div class="ov-card" style="border-left-color:var(--warning);"><div class="num" style="color:var(--warning)">${avgProgress}%</div><div class="label">平均进度</div></div>
             `;
 
-            setTimeout(function () { document.querySelectorAll('.proj-textarea').forEach(function (el) { autoResize(el); }); }, 10);
+            setTimeout(function () {
+                document.querySelectorAll('.proj-textarea').forEach(function (el) { autoResize(el); });
+            }, 10);
+            renderFocusList();
         }
 
-        function updateProjectSlider(sliderEl, idx) {
-            // 拖动时只更新 UI，不保存、不重绘图表
+        function updateProjectSlider(sliderEl) {
             const val = sliderEl.value;
             sliderEl.previousElementSibling.querySelector('.progress-num').innerText = val + '%';
             sliderEl.previousElementSibling.querySelector('.progress-bar-fill').style.width = val + '%';
@@ -612,51 +1003,91 @@
             }
             debounceSave(false);
         }
-        // 日程操作
-        function addSchedule(idx) { chartData.projects[idx].schedules.push({name:"", date:""}); saveData(); renderProjects(); }
+        function addSchedule(idx) { chartData.projects[idx].schedules.push({name:"", date:"", owner:"", done:false}); saveData(); renderProjects(); }
         function delSchedule(idx, sIdx) { chartData.projects[idx].schedules.splice(sIdx, 1); saveData(); renderProjects(); }
-        function updateSchedule(idx, sIdx, field, val) { chartData.projects[idx].schedules[sIdx][field] = val; debounceSave(false); }
-        // 节点操作
-        function addMilestone(idx) { chartData.projects[idx].milestones.push({name:"", date:""}); saveData(); renderProjects(); }
+        function updateSchedule(idx, sIdx, field, val) {
+            chartData.projects[idx].schedules[sIdx][field] = val;
+            debounceSave(false);
+            renderFocusList();
+        }
+        function toggleScheduleDone(idx, sIdx, checked) {
+            chartData.projects[idx].schedules[sIdx].done = checked;
+            saveData(); renderProjects();
+        }
+        function addMilestone(idx) { chartData.projects[idx].milestones.push({name:"", date:"", owner:"", done:false}); saveData(); renderProjects(); }
         function delMilestone(idx, mIdx) { chartData.projects[idx].milestones.splice(mIdx, 1); saveData(); renderProjects(); }
+        function toggleMilestoneDone(idx, mIdx, checked) {
+            chartData.projects[idx].milestones[mIdx].done = checked;
+            saveData(); renderProjects();
+        }
         function updateMilestone(idx, mIdx, field, val, evt) {
             chartData.projects[idx].milestones[mIdx][field] = val;
-
-            // 局部更新超时样式，不重绘整个表格，避免打字中焦点丢失
             if (field === 'date' || field === 'name') {
                 const ms = chartData.projects[idx].milestones[mIdx];
-                let isOverdue = false;
-                if (ms.date && chartData.projects[idx].status !== '已完成' && ms.date < getTodayStr()) {
-                    isOverdue = true;
-                }
+                const state = getDateState(ms.date, ms.done);
                 const ev = evt || window.event;
-                const rowEl = ev.target.closest('.dynamic-row');
+                const rowEl = ev.target.closest('.event-card');
                 const dateInput = rowEl.querySelector('input[type="date"]');
-                if (isOverdue) {
-                    dateInput.classList.add('overdue-input');
-                    if (!rowEl.querySelector('.overdue-tip')) {
-                        dateInput.insertAdjacentHTML('afterend', '<span class="overdue-tip">⚠️超时</span>');
-                    }
-                } else {
-                    dateInput.classList.remove('overdue-input');
-                    const tip = rowEl.querySelector('.overdue-tip');
-                    if (tip) tip.remove();
-                }
+                dateInput.className = 'proj-input ev-date ' + dateStateClass(state);
+                const oldTip = rowEl.querySelector('.overdue-tip,.soon-tip');
+                if (oldTip) oldTip.remove();
+                const newTip = dateStateTip(state);
+                if (newTip) dateInput.insertAdjacentHTML('afterend', newTip);
             }
             debounceSave(false);
+            renderFocusList();
         }
 
-        function moveProject(index, direction) {
-            const newIndex = index + direction;
-            if (newIndex < 0 || newIndex >= chartData.projects.length) return;
-            const temp = chartData.projects[index];
-            chartData.projects[index] = chartData.projects[newIndex];
-            chartData.projects[newIndex] = temp;
+        /* 子事项 */
+        function addSubTask(idx) {
+            chartData.projects[idx].subTasks.push({ name:"", owner:"", date:"", status:"待开始", progress:0 });
+            saveData(); renderProjects();
+        }
+        function delSubTask(idx, tIdx) {
+            chartData.projects[idx].subTasks.splice(tIdx, 1);
+            saveData(); renderProjects();
+        }
+        function updateSubTask(idx, tIdx, field, val) {
+            const st = chartData.projects[idx].subTasks[tIdx];
+            if (field === 'progress') {
+                val = parseInt(val, 10) || 0;
+                if (val >= 100) { st.status = '已完成'; st.progress = 100; }
+                else {
+                    st.progress = val;
+                    if (st.status === '已完成') st.status = '进行中';
+                }
+                saveData(); renderProjects();
+                return;
+            }
+            if (field === 'status') {
+                st.status = val;
+                if (val === '已完成') st.progress = 100;
+                saveData(); renderProjects();
+                return;
+            }
+            st[field] = val;
+            debounceSave(false);
+            renderFocusList();
+        }
+        function updateSubTaskSlider(sliderEl) {
+            sliderEl.nextElementSibling.innerText = sliderEl.value + '%';
+        }
+        function calcProgressFromSubs(idx) {
+            const subs = chartData.projects[idx].subTasks;
+            if (!subs.length) { showToast('暂无子事项，无法汇总', 'error'); return; }
+            const sum = subs.reduce(function (a, s) { return a + (parseInt(s.progress, 10) || 0); }, 0);
+            chartData.projects[idx].progress = Math.round(sum / subs.length);
             saveData(); renderProjects();
             if (currentMetric === 'project') debounceChartRefresh();
         }
+
         function addProject() {
-            chartData.projects.push({ name: "新项目", status: "待开始", schedules: [{name:"开始", date:""}], progress: 0, milestones: [], todo: "", risk: "", remark: "" });
+            chartData.projects.push({
+                name: "新项目", owner: "", status: "待开始",
+                schedules: [{name:"开始", date:"", owner:"", done:false}],
+                progress: 0, milestones: [], subTasks: [],
+                todo: "", risk: "", remark: ""
+            });
             saveData(); renderProjects();
             if (currentMetric === 'project') debounceChartRefresh();
         }
@@ -667,13 +1098,17 @@
             if (currentMetric === 'project') debounceChartRefresh();
         }
 
-        // ================= 协助事项逻辑 =================
+        /* ================= 协助事项 ================= */
         function renderSupportTasks() {
             const tbody = document.getElementById('supportBody');
             tbody.innerHTML = '';
+            if (!chartData.supportTasks.length) {
+                tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">暂无协助事项</div></td></tr>';
+                renderFocusList();
+                return;
+            }
             chartData.supportTasks.forEach(function (task, idx) {
                 const tr = document.createElement('tr');
-
                 let statusClass = "status-ongoing";
                 if (task.status === "已完成") statusClass = "status-done";
                 if (task.status === "有风险" || task.status === "已延期") statusClass = "status-risk";
@@ -694,28 +1129,24 @@
                     <td><textarea class="proj-textarea" rows="1" oninput="autoResize(this)" onchange="updateSupport(${idx}, 'note', this.value)" placeholder="备注">${escapeHtml(task.note)}</textarea></td>
                     <td>
                         <div class="op-btns">
-                            <span class="op-btn" onclick="moveSupport(${idx}, -1)" title="上移">↑</span>
-                            <span class="op-btn" onclick="moveSupport(${idx}, 1)" title="下移">↓</span>
+                            <span class="drag-handle" title="拖拽排序">⠿</span>
                             <span class="op-btn del" onclick="deleteSupport(${idx})" title="删除">×</span>
                         </div>
                     </td>
                 `;
                 tbody.appendChild(tr);
+                bindRowDrag(tr, 'support', idx);
             });
-            setTimeout(function () { document.querySelectorAll('.proj-textarea').forEach(function (el) { autoResize(el); }); }, 10);
+            setTimeout(function () {
+                document.querySelectorAll('.proj-textarea').forEach(function (el) { autoResize(el); });
+            }, 10);
+            renderFocusList();
         }
         function updateSupport(idx, field, val) {
             chartData.supportTasks[idx][field] = val;
             if (field === 'status') renderSupportTasks();
+            else renderFocusList();
             debounceSave(false);
-        }
-        function moveSupport(index, direction) {
-            const newIndex = index + direction;
-            if (newIndex < 0 || newIndex >= chartData.supportTasks.length) return;
-            const temp = chartData.supportTasks[index];
-            chartData.supportTasks[index] = chartData.supportTasks[newIndex];
-            chartData.supportTasks[newIndex] = temp;
-            saveData(); renderSupportTasks();
         }
         function addSupportTask() {
             chartData.supportTasks.push({ task: "", schedule: "", status: "待开始", remark: "", note: "" });
@@ -727,7 +1158,7 @@
             saveData(); renderSupportTasks();
         }
 
-        // ================= 图表与筛选逻辑 =================
+        /* ================= 图表与筛选 ================= */
         function renderFilter() {
             const startSel = document.getElementById('startTime');
             const endSel = document.getElementById('endTime');
@@ -737,8 +1168,6 @@
                 endSel.innerHTML += `<option value="${idx}">${escapeHtml(t)}</option>`;
             });
             startSel.value = 0; endSel.value = chartData.times.length - 1;
-
-            // 时间段切换时图表与统计卡片强制联动
             startSel.onchange = function () { renderChart(); renderSummary(); };
             endSel.onchange = function () { renderChart(); renderSummary(); };
         }
@@ -747,13 +1176,10 @@
             currentMetric = metric;
             document.querySelectorAll('.tab-btn').forEach(function (b) { b.classList.remove('active'); });
             btn.classList.add('active');
-
             const timeSelects = document.querySelectorAll('.filter-bar select');
-            if (metric === 'project') {
-                timeSelects.forEach(function (s) { s.style.display = 'none'; });
-            } else {
-                timeSelects.forEach(function (s) { s.style.display = 'inline-block'; });
-            }
+            timeSelects.forEach(function (s) { s.style.display = metric === 'project' ? 'none' : 'inline-block'; });
+            const legendBox = document.getElementById('chartLegend');
+            if (legendBox) legendBox.style.display = metric === 'project' ? 'flex' : 'none';
             renderChart();
             renderSummary();
         }
@@ -774,26 +1200,176 @@
 
             if (currentMetric === 'rfq') { tipDom.innerText = "当前指标：RFQ DTC 客户需求汇总（横向柱状图）"; renderRFQChart(startIdx, endIdx); }
             else if (currentMetric === 'dr') { tipDom.innerText = "当前指标：DR 机型排期时间轴（散点图）"; renderDRChart(startIdx, endIdx); }
-            else if (currentMetric === 'project') { tipDom.innerText = "当前指标：重点项目进度对比图"; renderProjectChart(); }
+            else if (currentMetric === 'project') { tipDom.innerText = "当前指标：项目里程碑看板（SCH 日程 + 关键节点时间轴）"; renderProjectChart(); }
             else { tipDom.innerText = "当前指标：常规工作完成量走势（折线图）"; renderDefaultChart(startIdx, endIdx, showTimes); }
         }
 
         function renderProjectChart() {
             if (chartData.projects.length === 0) { myChart.clear(); return; }
-            const names = chartData.projects.map(function (p) { return p.name || '未命名'; });
-            const data = chartData.projects.map(function (p) {
-                let color = '#409eff';
-                if (p.status === '已完成') color = '#67c23a';
-                if (p.status === '有风险') color = '#f56c6c';
-                if (p.status === '待开始') color = '#909399';
+            const projects = chartData.projects;
+            const today = getTodayStr();
+            const todayTs = new Date(today + 'T00:00:00').getTime();
+            const names = projects.map(function (p) { return p.name || '未命名'; });
+
+            const events = [];
+            const spans = [];
+            let anyDate = false;
+
+            projects.forEach(function (p, pi) {
+                const dateList = [];
+                p.schedules.forEach(function (s) {
+                    if (s.date) {
+                        anyDate = true; dateList.push(s.date);
+                        const schState = getDateState(s.date, s.done);
+                        const stateCode = schState === 'overdue' ? 1 : (schState === 'soon' ? 2 : 0);
+                        events.push([new Date(s.date + 'T00:00:00').getTime(), pi, 0, s.done ? 1 : 0, stateCode,
+                            s.name || '', s.owner || '', p.name || '未命名', p.status || '', p.progress || 0, s.date]);
+                    }
+                });
+                p.milestones.forEach(function (s) {
+                    if (s.date) {
+                        anyDate = true; dateList.push(s.date);
+                        const msState = getDateState(s.date, s.done);
+                        const stateCode = msState === 'overdue' ? 1 : (msState === 'soon' ? 2 : 0);
+                        events.push([new Date(s.date + 'T00:00:00').getTime(), pi, 1, s.done ? 1 : 0, stateCode,
+                            s.name || '', s.owner || '', p.name || '未命名', p.status || '', p.progress || 0, s.date]);
+                    }
+                });
+                if (dateList.length) {
+                    const ts = dateList.map(function (d) { return new Date(d + 'T00:00:00').getTime(); });
+                    spans.push([Math.min.apply(null, ts), Math.max.apply(null, ts), pi]);
+                }
+            });
+
+            if (!anyDate) { renderProjectProgressBar(names, projects); return; }
+
+            const statusDotKey = function (st) {
+                if (st === '已完成') return 'dotGreen';
+                if (st === '有风险') return 'dotRed';
+                if (st === '待开始') return 'dotGray';
+                return 'dotBlue';
+            };
+
+            myChart.setOption({
+                grid: { left: 16, right: 28, top: 26, bottom: 36, containLabel: true },
+                tooltip: { trigger: 'item', formatter: projectEventTooltip },
+                xAxis: {
+                    type: 'time',
+                    axisLabel: { formatter: function (v) { const d = new Date(v); return (d.getMonth() + 1) + '/' + d.getDate(); } },
+                    splitLine: { lineStyle: { color: '#eef1f6' } },
+                    axisLine: { lineStyle: { color: '#d7dde6' } },
+                    axisTick: { lineStyle: { color: '#d7dde6' } }
+                },
+                yAxis: {
+                    type: 'category', data: names, inverse: true,
+                    axisTick: { show: false }, axisLine: { show: false },
+                    axisLabel: {
+                        width: 175, overflow: 'truncate',
+                        formatter: function (val, idx) {
+                            const p = projects[idx];
+                            return '{' + statusDotKey(p.status) + '|●} {nm|' + (p.name || '未命名') + '} {pc|' + (p.progress || 0) + '%}';
+                        },
+                        rich: {
+                            dotBlue: { color: '#4f7cff', fontSize: 11, padding: [0, 4, 0, 0] },
+                            dotGreen: { color: '#16a34a', fontSize: 11, padding: [0, 4, 0, 0] },
+                            dotRed: { color: '#e11d48', fontSize: 11, padding: [0, 4, 0, 0] },
+                            dotGray: { color: '#94a3b8', fontSize: 11, padding: [0, 4, 0, 0] },
+                            nm: { color: '#1c2736', fontSize: 12, fontWeight: 600, width: 105, overflow: 'truncate' },
+                            pc: { color: '#4b586b', fontSize: 11, fontWeight: 700, padding: [0, 0, 0, 4] }
+                        }
+                    }
+                },
+                series: [
+                    {
+                        type: 'custom', name: '项目跨度', renderItem: spanRenderItem, data: spans,
+                        silent: true, z: 1, clip: true, tooltip: { show: false }
+                    },
+                    {
+                        type: 'custom', name: '里程碑事件', renderItem: eventRenderItem, data: events, z: 3,
+                        markLine: {
+                            silent: true, symbol: 'none',
+                            data: [{ xAxis: todayTs }],
+                            lineStyle: { color: '#e11d48', type: 'dashed', width: 1.5 },
+                            label: { formatter: '今天', color: '#e11d48', fontSize: 10, position: 'insideEndTop' }
+                        }
+                    }
+                ]
+            }, true);
+        }
+
+        function spanRenderItem(params, api) {
+            const p1 = api.coord([api.value(0), api.value(2)]);
+            const p2 = api.coord([api.value(1), api.value(2)]);
+            return {
+                type: 'line',
+                shape: { x1: p1[0], y1: p1[1], x2: p2[0], y2: p2[1] },
+                style: { stroke: '#dfe6f0', lineWidth: 8, lineCap: 'round' }
+            };
+        }
+
+        function eventRenderItem(params, api) {
+            const pt = api.coord([api.value(0), api.value(1)]);
+            const kind = api.value(2);
+            const done = api.value(3);
+            const stateCode = api.value(4);
+            if (kind === 0) {
+                return {
+                    type: 'circle',
+                    shape: { cx: pt[0], cy: pt[1], r: 7.5 },
+                    style: { fill: done ? '#4f7cff' : '#ffffff', stroke: '#4f7cff', lineWidth: 2 }
+                };
+            }
+            let color = '#d97706';
+            if (stateCode === 1) color = '#e11d48';
+            else if (stateCode === 2) color = '#f59e0b';
+            return {
+                type: 'polygon',
+                shape: {
+                    points: [
+                        [pt[0], pt[1] - 9],
+                        [pt[0] + 9, pt[1]],
+                        [pt[0], pt[1] + 9],
+                        [pt[0] - 9, pt[1]]
+                    ]
+                },
+                style: { fill: done ? color : '#ffffff', stroke: color, lineWidth: 2 }
+            };
+        }
+
+        function projectEventTooltip(p) {
+            const d = p.data;
+            const isSch = d[2] === 0;
+            const kind = isSch ? 'SCH 日程' : '关键节点';
+            const kindColor = isSch ? '#4f7cff' : '#d97706';
+            let stateTxt;
+            if (d[3]) stateTxt = '<span style="color:#16a34a">✓ 已完成</span>';
+            else if (d[4] === 1) stateTxt = '<span style="color:#e11d48">⚠ 已超时</span>';
+            else if (d[4] === 2) stateTxt = '<span style="color:#d97706">3天内临近</span>';
+            else stateTxt = '<span style="color:#d97706">待完成</span>';
+            return '<div style="font-weight:700;margin-bottom:4px;">' + escapeHtml(d[7]) + '</div>' +
+                '<div style="color:#8a97a8;font-size:11px;margin-bottom:6px;">项目状态：' + escapeHtml(d[8]) + ' · 整体进度 ' + d[9] + '%</div>' +
+                '<div style="border-top:1px solid #eee;padding-top:6px;">' +
+                '<div><span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:' + kindColor + ';margin-right:6px;"></span>' + kind + '：' + escapeHtml(d[5] || '未命名') + '</div>' +
+                '<div style="margin-top:4px;">日期：' + d[10] + '</div>' +
+                '<div style="margin-top:4px;">担当：' + escapeHtml(d[6] || '—') + '</div>' +
+                '<div style="margin-top:4px;">' + stateTxt + '</div></div>';
+        }
+
+        function renderProjectProgressBar(names, projects) {
+            const data = projects.map(function (p) {
+                let color = '#4f7cff';
+                if (p.status === '已完成') color = '#16a34a';
+                if (p.status === '有风险') color = '#e11d48';
+                if (p.status === '待开始') color = '#64748b';
                 return { value: p.progress || 0, itemStyle: { color: color } };
             });
             myChart.setOption({
+                graphic: [],
                 tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' }, formatter: '{b}: {c}%' },
                 grid: { left: '3%', right: '4%', bottom: '5%', top: '10%', containLabel: true },
                 xAxis: { type: 'value', max: 100, axisLabel: { formatter: '{value}%' } },
                 yAxis: { type: 'category', data: names, axisLabel: { width: 150, overflow: 'truncate' } },
-                series: [{ type: 'bar', data: data, barWidth: '40%', label: { show: true, position: 'right', formatter: '{c}%' }, showBackground: true, backgroundStyle: { color: 'rgba(180, 180, 180, 0.1)' } }]
+                series: [{ type: 'bar', data: data, barWidth: '40%', label: { show: true, position: 'right', formatter: '{c}%' }, showBackground: true, backgroundStyle: { color: 'rgba(180,180,180,.12)' } }]
             }, true);
         }
 
@@ -815,13 +1391,11 @@
             for (let c = startIdx; c <= endIdx; c++) {
                 const text = chartData.taskData['RFQ DTC']?.[c] || '';
                 if (text === '/') continue;
-                const lines = text.split('\n');
-                lines.forEach(function (line) {
-                    // 放宽：兼容中英文冒号、客户名中的横杠（如 IO-DATA）
+                text.split('\n').forEach(function (line) {
                     const match = line.match(/([A-Za-z\u4e00-\u9fa5\s_\-]+)[:：]\s*(\d+)/);
                     if (match) {
-                        const name = match[1].trim(); const num = parseInt(match[2], 10);
-                        customerMap[name] = (customerMap[name] || 0) + num;
+                        const name = match[1].trim();
+                        customerMap[name] = (customerMap[name] || 0) + parseInt(match[2], 10);
                     }
                 });
             }
@@ -829,8 +1403,9 @@
             myChart.setOption({
                 tooltip: { trigger: 'axis', axisPointer: { type: 'shadow' } },
                 grid: { left: '3%', right: '4%', bottom: '5%', top: '10%', containLabel: true },
-                xAxis: { type: 'value', name: '需求数量' }, yAxis: { type: 'category', data: sorted.map(function (item) { return item.name; }) },
-                series: [{ type: 'bar', data: sorted.map(function (item) { return item.val; }), itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [{ offset: 0, color: '#83bff6' }, { offset: 1, color: '#188df0' }]) }, label: { show: true, position: 'right' } }]
+                xAxis: { type: 'value', name: '需求数量' },
+                yAxis: { type: 'category', data: sorted.map(function (i) { return i.name; }) },
+                series: [{ type: 'bar', data: sorted.map(function (i) { return i.val; }), itemStyle: { color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [{ offset: 0, color: '#8fb0ff' }, { offset: 1, color: '#4f7cff' }]) }, label: { show: true, position: 'right' } }]
             }, true);
         }
 
@@ -839,15 +1414,12 @@
             for (let c = startIdx; c <= endIdx; c++) {
                 const text = chartData.taskData['DR']?.[c] || '';
                 if (text === '/') continue;
-                const lines = text.split('\n');
-                lines.forEach(function (line) {
-                    // 放宽：兼容中英文冒号，日期分隔符支持 / - .
+                text.split('\n').forEach(function (line) {
                     const match = line.match(/(.+?)[:：]\s*(\d{1,2})[\/\-.](\d{1,2})/);
                     if (match) {
                         const model = match[1].trim();
-                        const dateLabel = match[2] + '/' + match[3];
                         yAxisData.add(model);
-                        scatterData.push([dateLabel, model]);
+                        scatterData.push([match[2] + '/' + match[3], model]);
                     }
                 });
             }
@@ -856,17 +1428,17 @@
                 grid: { left: '3%', right: '4%', bottom: '5%', top: '10%', containLabel: true },
                 xAxis: { type: 'category', name: '日期(月/日)', splitLine: { show: true } },
                 yAxis: { type: 'category', data: Array.from(yAxisData), axisLabel: { width: 120, overflow: 'truncate' } },
-                series: [{ type: 'scatter', symbolSize: 15, data: scatterData, itemStyle: { color: '#f56c6c', shadowBlur: 10, shadowColor: 'rgba(245, 108, 108, 0.5)' } }]
+                series: [{ type: 'scatter', symbolSize: 15, data: scatterData, itemStyle: { color: '#e11d48', shadowBlur: 10, shadowColor: 'rgba(225,29,72,.5)' } }]
             }, true);
         }
 
         function renderSummary() {
             const startIdx = parseInt(document.getElementById('startTime').value, 10);
             const endIdx = parseInt(document.getElementById('endTime').value, 10);
-            const row = document.getElementById('summaryRow'); row.innerHTML = '';
+            const row = document.getElementById('summaryRow');
+            row.innerHTML = '';
             if (currentMetric === 'project') { row.style.display = 'none'; return; }
             row.style.display = 'grid';
-
             chartSeriesConfig.forEach(function (item) {
                 const arr = [];
                 for (let c = startIdx; c <= endIdx; c++) arr.push(getTaskValue(item.name, c));
@@ -876,47 +1448,98 @@
             });
         }
 
-        // ================= 工作明细表渲染 =================
+        /* ================= 工作明细表 ================= */
         function renderTaskTable() {
+            renderGroupBar();
             const thead = document.getElementById('taskHead');
             thead.innerHTML = '<th>工作任务 \\ 时间段</th>';
             chartData.times.forEach(function (t) { thead.innerHTML += `<th>${escapeHtml(t)}</th>`; });
-            const tbody = document.getElementById('taskBody'); tbody.innerHTML = '';
+            const tbody = document.getElementById('taskBody');
+            tbody.innerHTML = '';
+            if (!chartData.taskRows.length) {
+                tbody.innerHTML = '<tr><td><div class="empty-state">暂无任务行</div></td></tr>';
+            }
             chartData.taskRows.forEach(function (row, index) {
                 const tr = document.createElement('tr');
                 tr.className = `group-${row.group}`;
-                const firstCol = `<span>${escapeHtml(row.name)}</span><div class="row-ops"><span class="op-btn" onclick="moveTaskRow(${index}, -1)">↑</span><span class="op-btn" onclick="moveTaskRow(${index}, 1)">↓</span><span class="op-btn del" onclick="deleteTaskRow(${index})">×</span></div>`;
-                let html = `<td>${firstCol}</td>`;
+                const noColor = row.color === 'none';
+                const bg = noColor ? 'transparent' : (row.color || groupDefaultColors[row.group] || '#f0f0f3');
+                const pickerValue = (row.color && row.color !== 'none') ? row.color : (groupDefaultColors[row.group] || '#f0f0f3');
+                const firstCol = `
+                    <span class="row-name" style="color:${pickTextColor(bg)};">${escapeHtml(row.name)}</span>
+                    <div class="row-ops">
+                        <span class="drag-handle" title="拖拽排序">⠿</span>
+                        <input type="color" class="row-color-picker" value="${escapeHtml(pickerValue)}" onchange="setTaskRowColor(${index},this.value)" title="自定义底色">
+                        <span class="color-none-btn" onclick="clearTaskRowColor(${index})" title="无底色">无</span>
+                        <span class="op-btn del" onclick="deleteTaskRow(${index})" title="删除">×</span>
+                    </div>`;
+                let html = `<td style="background:${bg};">${firstCol}</td>`;
                 chartData.times.forEach(function (t, colIdx) {
                     const val = chartData.taskData[row.name]?.[colIdx] || '/';
                     html += `<td><textarea class="task-cell" rows="1" oninput="autoResize(this)" data-row="${escapeHtml(row.name)}" data-col="${colIdx}" onchange="updateTaskCell(this)">${escapeHtml(val)}</textarea></td>`;
                 });
-                tr.innerHTML = html; tbody.appendChild(tr);
+                tr.innerHTML = html;
+                tbody.appendChild(tr);
+                bindRowDrag(tr, 'task', index);
             });
-            setTimeout(function () { document.querySelectorAll('.task-cell').forEach(function (el) { autoResize(el); }); }, 10);
+            setTimeout(function () {
+                document.querySelectorAll('.task-cell').forEach(function (el) { autoResize(el); });
+            }, 10);
+            applyTaskFilter(document.getElementById('taskFilter').value);
+        }
+        function setTaskRowColor(index, value) {
+            chartData.taskRows[index].color = value;
+            saveData(); renderTaskTable();
+        }
+        function clearTaskRowColor(index) {
+            chartData.taskRows[index].color = 'none';
+            saveData(); renderTaskTable();
+        }
+        function renderGroupBar() {
+            const bar = document.getElementById('groupBar');
+            if (!bar) return;
+            const counts = {};
+            chartData.taskRows.forEach(function (r) { counts[r.group] = (counts[r.group] || 0) + 1; });
+            const groups = Object.keys(groupMeta).filter(function (g) { return counts[g]; });
+            bar.innerHTML = groups.map(function (g) {
+                const meta = groupMeta[g];
+                const collapsed = collapsedGroups[g] ? 'is-collapsed' : '';
+                return `<span class="group-chip ${collapsed}" onclick="toggleGroup('${g}')">
+                    <span class="swatch" style="background:${meta.color};"></span>
+                    <span class="gname">${meta.label}</span>
+                    <span class="cnt">${counts[g]}</span>
+                </span>`;
+            }).join('');
+        }
+        function toggleGroup(g) {
+            collapsedGroups[g] = !collapsedGroups[g];
+            renderGroupBar();
+            applyTaskFilter(document.getElementById('taskFilter').value);
+        }
+        function applyTaskFilter(keyword) {
+            const kw = (keyword || '').trim().toLowerCase();
+            document.querySelectorAll('#taskBody tr').forEach(function (tr, i) {
+                const row = chartData.taskRows[i];
+                if (!row) return;
+                const name = (tr.querySelector('.row-name')?.textContent || '').toLowerCase();
+                const matchKw = !kw || name.includes(kw);
+                const notCollapsed = !collapsedGroups[row.group];
+                tr.style.display = (matchKw && notCollapsed) ? '' : 'none';
+            });
         }
         function updateTaskCell(el) {
-            const row = el.dataset.row; const col = parseInt(el.dataset.col, 10);
+            const row = el.dataset.row;
+            const col = parseInt(el.dataset.col, 10);
             if (!chartData.taskData[row]) chartData.taskData[row] = new Array(chartData.times.length).fill('/');
             chartData.taskData[row][col] = el.value;
             debounceSave(false);
-            if (chartSeriesConfig.some(function (s) { return s.name === row; })) {
-                debounceChartRefresh();
-            }
-        }
-        function moveTaskRow(index, direction) {
-            const newIndex = index + direction;
-            if (newIndex < 0 || newIndex >= chartData.taskRows.length) return;
-            const temp = chartData.taskRows[index];
-            chartData.taskRows[index] = chartData.taskRows[newIndex];
-            chartData.taskRows[newIndex] = temp;
-            saveData(); renderTaskTable();
+            if (chartSeriesConfig.some(function (s) { return s.name === row; })) debounceChartRefresh();
         }
         function addTaskRow() {
             const name = prompt('请输入新任务名称');
             if (!name || !name.trim()) return;
             const finalName = name.trim();
-            chartData.taskRows.push({ name: finalName, group: "blue" });
+            chartData.taskRows.push({ name: finalName, group: "blue", color: "" });
             chartData.taskData[finalName] = new Array(chartData.times.length).fill('/');
             saveData(); renderTaskTable();
         }
@@ -935,27 +1558,27 @@
             saveData(); renderFilter(); renderChart(); renderSummary(); renderTaskTable();
         }
 
-        // ================= 密钥与权限 =================
+        /* ================= 密钥与权限 ================= */
         function openKeySetting(){
-            if (!isEditMode) return alert("🔒请先解锁编辑模式");
+            if (!isEditMode) { showToast('请先解锁编辑模式', 'error'); return; }
             const newKey = prompt("设置访问密钥（留空=关闭密码）", chartData.editKey || "");
             if (newKey === null) return;
             chartData.editKey = newKey.trim();
             saveData();
-            alert("✅密钥保存成功！");
+            showToast('密钥保存成功', 'success');
         }
         function unlockEdit(){
             const pwd = prompt("请输入编辑密钥：");
             if (pwd === chartData.editKey) {
                 isEditMode = true;
                 applyEditStatus();
-                alert("✅密钥正确");
-            } else alert("❌密钥错误");
+                showToast('密钥正确，已解锁', 'success');
+            } else showToast('密钥错误', 'error');
         }
         function applyEditStatus(){
             const tipDom = document.getElementById('readonlyTip');
             const editBtns = document.querySelectorAll(".edit-btn");
-            const allInput = document.querySelectorAll(".task-cell,.sm-cell-textarea,.proj-input,.proj-textarea,.status-select, input[type=range], .btn-add");
+            const allInput = document.querySelectorAll(".task-cell,.sm-cell-textarea,.proj-input,.proj-textarea,.status-select,input[type=range],input[type=color],input[type=checkbox],.btn-add,.quick-search");
             const opBtns = document.querySelectorAll(".op-btn");
             if (isEditMode) {
                 tipDom.style.display = "none";
@@ -970,11 +1593,10 @@
                 opBtns.forEach(function (b) { b.style.pointerEvents = "none"; });
                 document.querySelectorAll('.btn-add').forEach(function (b) { b.style.display = 'none'; });
             }
-            // body 级 class，CSS 兜底隐藏危险操作
             document.body.classList.toggle('is-readonly', !isEditMode);
         }
 
-        // ================= 备份与导出 =================
+        /* ================= 备份与导出 ================= */
         function exportBackup() {
             saveData();
             const blob = new Blob([JSON.stringify(chartData, null, 2)], { type: 'application/json' });
@@ -996,9 +1618,9 @@
                     safeSaveToLocalStorage(STORAGE_KEY, chartData);
                     isEditMode = false;
                     renderAll();
-                    alert('✅备份导入成功！缺失字段已自动补全。');
+                    showToast('备份导入成功，缺失字段已补全', 'success');
                 } catch (err) {
-                    alert('❌备份文件解析失败或结构不完整，请检查文件。');
+                    showToast('备份文件解析失败或结构不完整', 'error');
                 }
             };
             reader.readAsText(file);
@@ -1006,8 +1628,6 @@
         }
         function saveHtmlFile(){
             saveData();
-            // JSON.stringify 已正确处理引号、换行、反斜杠；
-            // 只需额外处理 script 闭合标签截断风险，并兼容 U+2028/2029
             const safeJsonStr = JSON.stringify(chartData)
                 .replace(/</g, '\\u003c')
                 .replace(/>/g, '\\u003e')
@@ -1025,7 +1645,7 @@
             a.href = URL.createObjectURL(blob);
             a.download = `周报看板_${new Date().toISOString().slice(0,10)}.html`;
             a.click();
-            alert("✅HTML已保存！");
+            showToast('含数据的 HTML 已保存', 'success');
         }
         function resetData() {
             if (!confirm('确定要重置为原始数据吗？建议先导出备份！')) return;
@@ -1034,9 +1654,72 @@
             renderAll();
         }
 
+        /* ================= 今日聚焦 ================= */
+        function renderFocusList() {
+            const listEl = document.getElementById('focusList');
+            const summaryEl = document.getElementById('focusSummary');
+            if (!listEl || !summaryEl) return;
+            const items = [];
+            function pushItem(project, kind, kindName, owner, date, state) {
+                items.push({ project: project, kind: kind, kindName: kindName, owner: owner, date: date, state: state });
+            }
+            (chartData.projects || []).forEach(function (p) {
+                (p.schedules || []).forEach(function (s) {
+                    const st = getDateState(s.date, s.done);
+                    if (st === 'overdue' || st === 'soon') pushItem(p.name, '日程', s.name, s.owner, s.date, st);
+                });
+                (p.milestones || []).forEach(function (s) {
+                    const st = getDateState(s.date, s.done);
+                    if (st === 'overdue' || st === 'soon') pushItem(p.name, '节点', s.name, s.owner, s.date, st);
+                });
+                (p.subTasks || []).forEach(function (s) {
+                    const st = getDateState(s.date, s.status === '已完成');
+                    if (st === 'overdue' || st === 'soon') pushItem(p.name, '子事项', s.name, s.owner, s.date, st);
+                    else if (s.status === '有风险') pushItem(p.name, '子事项', s.name, s.owner, s.date, 'risk');
+                });
+            });
+            (chartData.supportTasks || []).forEach(function (s) {
+                const st = getDateState(s.schedule, s.status === '已完成');
+                if (st === 'overdue' || st === 'soon') pushItem('协助事项', '协助', s.task, '', s.schedule, st);
+            });
+
+            const order = { overdue: 0, risk: 1, soon: 2 };
+            items.sort(function (a, b) {
+                if (order[a.state] !== order[b.state]) return order[a.state] - order[b.state];
+                return (a.date || '').localeCompare(b.date || '');
+            });
+
+            const cOverdue = items.filter(function (i) { return i.state === 'overdue'; }).length;
+            const cRisk = items.filter(function (i) { return i.state === 'risk'; }).length;
+            const cSoon = items.filter(function (i) { return i.state === 'soon'; }).length;
+
+            summaryEl.innerHTML =
+                (cOverdue ? '<span class="fs-pill fs-overdue">超时 ' + cOverdue + '</span>' : '') +
+                (cRisk ? '<span class="fs-pill fs-risk">风险 ' + cRisk + '</span>' : '') +
+                (cSoon ? '<span class="fs-pill fs-soon">临近 ' + cSoon + '</span>' : '');
+
+            if (!items.length) {
+                listEl.innerHTML = '<div class="focus-empty">✅ 当前无超时 / 临近 / 风险事项，进展正常</div>';
+                return;
+            }
+            const stateText = { overdue: '⚠ 已超时', risk: '有风险', soon: '3天内临近' };
+            listEl.innerHTML = items.map(function (it) {
+                const metaParts = [it.project];
+                if (it.owner) metaParts.push(it.owner);
+                if (it.date) metaParts.push(it.date);
+                return '<div class="focus-item f-' + it.state + '">' +
+                    '<span class="f-kind">' + it.kind + '</span>' +
+                    '<span class="f-name">' + escapeHtml(it.kindName || '未命名') + '</span>' +
+                    '<span class="f-meta">' + escapeHtml(metaParts.join(' · ')) + '</span>' +
+                    '<span class="f-state">' + stateText[it.state] + '</span>' +
+                '</div>';
+            }).join('');
+        }
+
         function renderAll() {
             renderFilter();
             if (!myChart) myChart = echarts.init(document.getElementById('mainChart'));
+            renderFocusList();
             renderProjects();
             renderSupportTasks();
             renderTaskTable();
@@ -1047,39 +1730,65 @@
             renderSummary();
         }
 
-        // SM表格
+        /* ================= SM 表格 ================= */
         const smColumns = ["EE", "Power", "FW", "ME", "Optical", "LCM ME", "Teardown Instruction"];
         function renderSmTable() {
             const tbody = document.getElementById('smBody');
             tbody.innerHTML = '';
+            if (!chartData.smData.length) {
+                tbody.innerHTML = '<tr><td colspan="9"><div class="empty-state">暂无 SM 项目，点击右上角“+ 新增项目”直接添加</div></td></tr>';
+                return;
+            }
             chartData.smData.forEach(function (project, pIdx) {
                 const nameTr = document.createElement('tr');
                 nameTr.className = 'sm-project-row';
-                nameTr.innerHTML = `<td colspan="9"><span>${escapeHtml(project.name)}</span><span class="op-btn del" onclick="deleteSmProject(${pIdx})">×</span></td>`;
+                nameTr.innerHTML = `<td colspan="9">
+                    <span class="sm-name-line">
+                        <span class="drag-handle" title="拖拽排序">⠿</span>
+                        <input class="proj-input sm-name-input" value="${escapeHtml(project.name)}" onchange="updateSmMeta(${pIdx},'name',this.value)" placeholder="项目名称 / 类型">
+                    </span>
+                    <span class="op-btn del" onclick="deleteSmProject(${pIdx})">×</span>
+                </td>`;
                 tbody.appendChild(nameTr);
+                bindRowDrag(nameTr, 'sm', pIdx);
 
                 const scheduleTr = document.createElement('tr');
-                let scheduleHtml = `<td>日程</td><td>${escapeHtml(project.customer)}</td>`;
+                let scheduleHtml = `<td class="sm-row-label">日程</td>
+                    <td><input class="proj-input sm-cust-input" value="${escapeHtml(project.customer)}" onchange="updateSmMeta(${pIdx},'customer',this.value)" placeholder="客户"></td>`;
                 smColumns.forEach(function (col) {
-                    scheduleHtml += `<td><textarea class="sm-cell-textarea" rows="1" oninput="autoResize(this)" data-p="${pIdx}" data-type="schedule" data-col="${escapeHtml(col)}" onchange="updateSmCell(this)">${escapeHtml(project.schedule[col])}</textarea></td>`;
+                    const v = project.schedule[col] || '';
+                    scheduleHtml += `<td><textarea class="sm-cell-textarea" rows="1" oninput="autoResize(this)" data-p="${pIdx}" data-type="schedule" data-col="${escapeHtml(col)}" onchange="updateSmCell(this)">${escapeHtml(v)}</textarea></td>`;
                 });
                 scheduleTr.innerHTML = scheduleHtml;
                 tbody.appendChild(scheduleTr);
 
                 const progressTr = document.createElement('tr');
-                let progressHtml = `<td>进度</td><td>${escapeHtml(project.customer)}</td>`;
+                let progressHtml = `<td class="sm-row-label">进度</td><td class="sm-cust-slot"></td>`;
                 smColumns.forEach(function (col) {
-                    progressHtml += `<td><textarea class="sm-cell-textarea" rows="1" oninput="autoResize(this)" data-p="${pIdx}" data-type="progress" data-col="${escapeHtml(col)}" onchange="updateSmCell(this)">${escapeHtml(project.progress[col])}</textarea></td>`;
+                    const v = project.progress[col] || '';
+                    progressHtml += `<td><textarea class="sm-cell-textarea" rows="1" oninput="autoResize(this)" data-p="${pIdx}" data-type="progress" data-col="${escapeHtml(col)}" onchange="updateSmCell(this)">${escapeHtml(v)}</textarea></td>`;
                 });
                 progressTr.innerHTML = progressHtml;
                 tbody.appendChild(progressTr);
 
                 const demandTr = document.createElement('tr');
                 demandTr.className = 'sm-demand-row';
-                demandTr.innerHTML = `<td colspan="9">需求时间：<input class="proj-input" style="width:100px; display:inline-block;" data-p="${pIdx}" data-field="demandTime" value="${escapeHtml(project.demandTime)}" onchange="updateSmDemand(this)">交稿时间：<input class="proj-input" style="width:100px; display:inline-block;" data-p="${pIdx}" data-field="submitTime" value="${escapeHtml(project.submitTime)}" onchange="updateSmDemand(this)">备注：<input class="proj-input" style="width:200px; display:inline-block;" data-p="${pIdx}" data-field="remark" value="${escapeHtml(project.remark)}" onchange="updateSmDemand(this)"></td>`;
+                demandTr.innerHTML = `<td colspan="9">
+                    <span class="sm-demand-line">
+                        <label>需求时间</label><input class="proj-input" data-p="${pIdx}" data-field="demandTime" value="${escapeHtml(project.demandTime)}" onchange="updateSmDemand(this)">
+                        <label>交稿时间</label><input class="proj-input" data-p="${pIdx}" data-field="submitTime" value="${escapeHtml(project.submitTime)}" onchange="updateSmDemand(this)">
+                        <label>备注</label><input class="proj-input sm-remark-input" data-p="${pIdx}" data-field="remark" value="${escapeHtml(project.remark)}" onchange="updateSmDemand(this)">
+                    </span>
+                </td>`;
                 tbody.appendChild(demandTr);
             });
-            setTimeout(function () { document.querySelectorAll('.sm-cell-textarea').forEach(function (el) { autoResize(el); }); }, 10);
+            setTimeout(function () {
+                document.querySelectorAll('.sm-cell-textarea').forEach(function (el) { autoResize(el); });
+            }, 10);
+        }
+        function updateSmMeta(pIdx, field, val) {
+            chartData.smData[pIdx][field] = val;
+            debounceSave(false);
         }
         function updateSmCell(el) {
             chartData.smData[el.dataset.p][el.dataset.type][el.dataset.col] = el.value;
@@ -1090,22 +1799,20 @@
             debounceSave(false);
         }
         function addSmProject() {
-            const name = prompt('请输入新项目名称');
-            if (!name || !name.trim()) return;
-            let customer = prompt('请输入客户名称（留空则为“未指定”）', 'Dell');
-            if (customer === null) return;
-            customer = customer.trim() || '未指定';
-            chartData.smData.push({
-                name: name.trim(),
-                customer: customer,
-                schedule: {},
-                progress: {},
-                demandTime: "",
-                submitTime: "",
-                remark: ""
-            });
+            const blank = {
+                name: "", customer: "",
+                schedule: {}, progress: {},
+                demandTime: "", submitTime: "", remark: ""
+            };
+            smColumns.forEach(function (col) { blank.schedule[col] = ""; blank.progress[col] = ""; });
+            chartData.smData.push(blank);
             saveData();
             renderSmTable();
+            setTimeout(function () {
+                const inputs = document.querySelectorAll('.sm-name-input');
+                const last = inputs[inputs.length - 1];
+                if (last) { last.scrollIntoView({ behavior: 'smooth', block: 'center' }); last.focus(); }
+            }, 60);
         }
         function deleteSmProject(index) {
             if (!confirm('确定删除该项目？')) return;
@@ -1114,15 +1821,22 @@
             renderSmTable();
         }
 
-        // 切后台/关闭页面前强制同步落盘，防止防抖窗口内最后一笔丢失
+        /* 生命周期强制保存 */
         document.addEventListener('visibilitychange', function () {
             if (document.visibilityState === 'hidden') saveData(false);
         });
         window.addEventListener('beforeunload', function () { saveData(false); });
 
+        /* Ctrl/Cmd + S 快捷保存 */
+        document.addEventListener('keydown', function (e) {
+            if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') {
+                e.preventDefault();
+                saveData(true);
+            }
+        });
+
         window.addEventListener('resize', function () {
             if (myChart) myChart.resize();
-            // 窗口尺寸变化后重算所有文本框高度，防止文字被遮挡/留白
             document.querySelectorAll('.task-cell,.sm-cell-textarea,.proj-textarea').forEach(function (el) {
                 autoResize(el);
             });
